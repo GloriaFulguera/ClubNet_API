@@ -49,6 +49,10 @@ secrets.json
 .env
 .env.*
 
+# Pero no ignores el de ejemplo
+!appsettings.Example.json
+
+
 # Archivos temporales
 *.tmp
 *.temp
