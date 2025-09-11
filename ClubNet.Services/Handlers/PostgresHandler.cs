@@ -4,7 +4,7 @@ namespace ClubNet.Services.Handlers
 {
     public class PostgresHandler
     {
-        public static string ConnectionString = "Host=localhost;Port=5432;Database=clubnet;Username=postgres;Password=12345678";
+        public static string ConnectionString = string.Empty;
 
         public static bool Exec(string query)
         {
