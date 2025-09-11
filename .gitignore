@@ -49,8 +49,13 @@ secrets.json
 .env
 .env.*
 
-# Pero no ignores el de ejemplo
-!appsettings.Example.json
+# Ignorar appsettings en cualquier carpeta
+**/appsettings.json
+**/appsettings.*.json
+
+# Excepción: mantener el template
+!**/appsettings.Example.json
+
 
 
 # Archivos temporales
