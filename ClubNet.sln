@@ -3,7 +3,31 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36203.30 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClubNet.Services", "ClubNet.Services\ClubNet.Services.csproj", "{57706291-05CE-4991-8857-D6B190FD3E09}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClubNet.Models", "ClubNet.Models\ClubNet.Models.csproj", "{4A987AAB-3612-4265-86C1-D69675165BA2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClubNet.Api", "ClubNet.Api\ClubNet.Api.csproj", "{0A492209-51C4-4E3A-BB88-D8AEE6DDEB00}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{57706291-05CE-4991-8857-D6B190FD3E09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57706291-05CE-4991-8857-D6B190FD3E09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57706291-05CE-4991-8857-D6B190FD3E09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57706291-05CE-4991-8857-D6B190FD3E09}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A987AAB-3612-4265-86C1-D69675165BA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A987AAB-3612-4265-86C1-D69675165BA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A987AAB-3612-4265-86C1-D69675165BA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A987AAB-3612-4265-86C1-D69675165BA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A492209-51C4-4E3A-BB88-D8AEE6DDEB00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A492209-51C4-4E3A-BB88-D8AEE6DDEB00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A492209-51C4-4E3A-BB88-D8AEE6DDEB00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A492209-51C4-4E3A-BB88-D8AEE6DDEB00}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
