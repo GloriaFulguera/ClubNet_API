@@ -1,0 +1,65 @@
+# Archivos de usuario de Visual Studio
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Archivos de compilación
+bin/
+obj/
+out/
+[Bb]uild/
+[Bb]uilds/
+
+# Publicaciones
+*.publishsettings
+*.pubxml
+*.pubxml.user
+*.pubxml.enc
+*.tmp
+.publish/
+
+# Archivos de VS Code
+.vscode/
+*.code-workspace
+
+# Archivos de Rider / JetBrains
+.idea/
+*.sln.iml
+
+# Archivos generados por dependencias
+*.nupkg
+*.snupkg
+*.nuspec
+*.dll
+*.exe
+*.log
+
+# Paquetes de NuGet
+# Restaurar con `dotnet restore`
+*.nuget
+packages/
+*.deps.json
+
+# Archivos de usuario y secretos
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.json
+secrets.json
+.env
+.env.*
+
+# Archivos temporales
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
