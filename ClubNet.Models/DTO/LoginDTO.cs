@@ -1,8 +1,7 @@
-﻿namespace ClubNet.Models
+﻿namespace ClubNet.Models.DTO
 {
-    public class Usuario
+    public class LoginDTO
     {
-        public int User_id { get; set; }
         public string? Email { get; set; }
         public string? Clave { get; set; }
     }
