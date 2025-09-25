@@ -8,7 +8,6 @@ namespace ClubNet.Services.Handlers
 
         public static bool Exec(string query, params (string, object)[] parameters)
         {
-            bool result = false;
             try
             {
                 using (var conn = new NpgsqlConnection(ConnectionString))
@@ -22,14 +21,43 @@ namespace ClubNet.Services.Handlers
 
                     conn.Open();
                     cmd.ExecuteNonQuery();
-                    result = true;
                 }
+                return true;
             }
             catch (Exception)
             {
-                result = false;
+                return false;
             }
-            return result;
+        }
+
+        public static string GetScalar(string query,params (string, object)[] parameters)
+        {
+            string scalarResult = string.Empty;
+
+            try
+            {
+                using (var conn = new NpgsqlConnection(ConnectionString))
+                {
+                    var cmd = new NpgsqlCommand(query, conn);
+
+                    foreach (var (name, value) in parameters)
+                    {
+                        cmd.Parameters.AddWithValue(name, value ?? DBNull.Value);
+                    }
+
+                    conn.Open();
+                    object result = cmd.ExecuteScalar();
+                    if(result != null)
+                    {
+                        scalarResult = result.ToString();
+                    }
+                }
+                return scalarResult;
+            }
+            catch (Exception)
+            {
+                return scalarResult;
+            }            
         }
     }
 }
