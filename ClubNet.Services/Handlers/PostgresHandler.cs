@@ -6,7 +6,7 @@ namespace ClubNet.Services.Handlers
     {
         public static string ConnectionString = string.Empty;
 
-        public static bool Exec(string query)
+        public static bool Exec(string query, params (string, object)[] parameters)
         {
             bool result = false;
             try
@@ -14,6 +14,12 @@ namespace ClubNet.Services.Handlers
                 using (var conn = new NpgsqlConnection(ConnectionString))
                 {
                     var cmd = new NpgsqlCommand(query, conn);
+
+                    foreach (var (name,value) in parameters)
+                    {
+                        cmd.Parameters.AddWithValue(name, value ?? DBNull.Value);
+                    }
+
                     conn.Open();
                     cmd.ExecuteNonQuery();
                     result = true;
