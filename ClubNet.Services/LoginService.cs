@@ -45,9 +45,9 @@ namespace ClubNet.Services
             else
             {
                 string queryPersona = $"INSERT INTO Personas(dni,nombre,apellido,fealta,estado,rol_id) " +
-                $"VALUES (@dni,@nombre,@apellido,@fealta,@estado,@rol);";
+                $"VALUES (@dni,@nombre,@apellido,NOW(),@estado,@rol);";
                 bool resultPersona = PostgresHandler.Exec(queryPersona, ("dni", register.Dni), ("nombre", register.Nombre),
-                    ("apellido", register.Apellido), ("fealta", "now()"), ("estado", true), ("rol", 3));
+                    ("apellido", register.Apellido), ("estado", true), ("rol", register.Rol));
                 
                 if(!resultPersona)
                 {

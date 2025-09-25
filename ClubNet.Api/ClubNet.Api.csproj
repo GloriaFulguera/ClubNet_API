@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ClubNet.Models\ClubNet.Models.csproj" />
     <ProjectReference Include="..\ClubNet.Services\ClubNet.Services.csproj" />
   </ItemGroup>
 
