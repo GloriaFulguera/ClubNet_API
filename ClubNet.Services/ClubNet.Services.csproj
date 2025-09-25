@@ -10,4 +10,8 @@
     <PackageReference Include="Npgsql" Version="9.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ClubNet.Models\ClubNet.Models.csproj" />
+  </ItemGroup>
+
 </Project>
