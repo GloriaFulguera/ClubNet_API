@@ -1,9 +1,0 @@
-﻿namespace ClubNet.Models
-{
-    public class Usuario
-    {
-        public int User_id { get; set; }
-        public string? Email { get; set; }
-        public string? Clave { get; set; }
-    }
-}

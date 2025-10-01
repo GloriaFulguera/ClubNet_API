@@ -10,7 +10,7 @@ namespace ClubNet.Services
         public async Task<ApiResponse> Login(LoginDTO login)
         {
             string query = $"SELECT COUNT (*) as Existe FROM Usuarios WHERE Email = @email and Clave = @clave";
-            string resultado = PostgresHandler.GetScalar(query, ("email", login.Email), ("@clave", login.Clave));
+            string resultado = PostgresHandler.GetScalar(query, ("email", login.Email), ("clave", login.Clave));
 
             ApiResponse loginResult = new ApiResponse();
 
@@ -23,7 +23,6 @@ namespace ClubNet.Services
             {
                 loginResult.Success = true;
                 loginResult.Message = "Usuario validado correctamente.";
-                //loginResult.Id = Convert.ToInt32(PostgresHandler.Exec($"SELECT id FROM Usuarios WHERE Email = '{login.Email}' AND Clave = '{login.Clave}'"));
             }
 
             return loginResult;
@@ -31,37 +30,28 @@ namespace ClubNet.Services
 
         public async Task<ApiResponse> Register(RegisterDTO register)
         {
-            //TO DO: corregir los mensajes de error
             ApiResponse response = new ApiResponse();
 
-            string queryUsuario = "INSERT INTO Usuarios(email,clave) VALUES (@email, @clave);";
-            bool resultUsuario = PostgresHandler.Exec(queryUsuario, ("email", register.Email), ("clave",register.Clave));
+            string query = "CALL public.SP_REGISTRAR_USUARIO(@p_email::varchar,@p_calve::varchar,@p_nombre::varchar,@p_apellido::varchar,@p_dni,@p_rol)";
+            string hash=BCrypt.Net.BCrypt.HashPassword(register.Clave);
 
-            if(!resultUsuario)
-            {
-                response.Success = false;
-                response.Message = "Ocurrio un problema al generar el usuario para ingresar al sistema";
-            }
+            bool result = PostgresHandler.Exec(query, 
+                ("p_email", register.Email), 
+                ("p_calve", hash),
+                ("p_nombre", register.Nombre), 
+                ("p_apellido", register.Apellido), 
+                ("p_dni", register.Dni),
+                ("p_rol", register.Rol));
+
+            if(result)
+                response.Success = true;
             else
             {
-                string queryPersona = $"INSERT INTO Personas(dni,nombre,apellido,fealta,estado,rol_id) " +
-                $"VALUES (@dni,@nombre,@apellido,NOW(),@estado,@rol);";
-                bool resultPersona = PostgresHandler.Exec(queryPersona, ("dni", register.Dni), ("nombre", register.Nombre),
-                    ("apellido", register.Apellido), ("estado", true), ("rol", register.Rol));
-                
-                if(!resultPersona)
-                {
-                    response.Success = false;
-                    response.Message = "Ocurrio un problema al crear el usuario";
-                }
-                else
-                {
-                    response.Success= true;
-                    response.Message=string.Empty;
-                }
+                response.Success = false;
+                response.Message = "Ocurrio un problema al registrar el usuario, contacte al administrador.";
             }
 
-            return response;
+                return response;
         }
 
     }
