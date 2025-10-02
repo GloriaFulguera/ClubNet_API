@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace ClubNet.Services
 {
-    public class UsuarioService: IUsuariosRepository
+    public class UsuarioService: IUsuarioRepository
     {
         public async Task<UsuarioDTO> GetUsuarioById(int id)
         {

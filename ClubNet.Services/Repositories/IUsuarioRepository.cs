@@ -3,7 +3,7 @@ using ClubNet.Models.DTO;
 
 namespace ClubNet.Services.Repositories
 {
-    public interface IUsuariosRepository
+    public interface IUsuarioRepository
     {
         public Task<UsuarioDTO> GetUsuarioById(int id);
         public Task<List<Rol>> GetRoles();
