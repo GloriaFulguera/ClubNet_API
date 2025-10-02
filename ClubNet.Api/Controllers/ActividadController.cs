@@ -1,5 +1,4 @@
 ﻿using ClubNet.Models;
-using ClubNet.Models.DTO;
 using ClubNet.Services.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,9 +16,15 @@ namespace ClubNet.Api.Controllers
         }
 
         [HttpPost("CreateActividad")]
-        public async Task<ApiResponse> CreateActividad(ActividadDTO actividad)
+        public async Task<ApiResponse> CreateActividad(Actividad actividad)
         {
             return await Task.Run(() => _actividadService.CreateActividad(actividad));
+        }
+
+        [HttpGet("GetActividades")]
+        public async Task<List<Actividad>> GetActividades()
+        {
+            return await Task.Run(() => _actividadService.GetActividades());
         }
     }
 }

@@ -1,13 +1,13 @@
 ﻿using ClubNet.Models;
-using ClubNet.Models.DTO;
 using ClubNet.Services.Handlers;
 using ClubNet.Services.Repositories;
+using Newtonsoft.Json;
 
 namespace ClubNet.Services
 {
     public class ActividadService:IActividadRepository
     {
-        public async Task<ApiResponse> CreateActividad(ActividadDTO actividad)
+        public async Task<ApiResponse> CreateActividad(Actividad actividad)
         {
             ApiResponse createResult = new ApiResponse();
             string query = $"INSERT INTO actividades(nombre,descripcion,cupo,estado,cuota_valor,url_imagen) " +
@@ -25,6 +25,14 @@ namespace ClubNet.Services
                 createResult.Message = "Ocurrio un problema al crear la actividad, contacte al administrador.";
 
             return createResult;
+        }
+
+        public async Task<List<Actividad>> GetActividades()
+        {
+            string query = "SELECT * FROM actividades ORDER BY actividad_id ASC;";
+            string result = PostgresHandler.GetJson(query);
+            List<Actividad> actividades = JsonConvert.DeserializeObject<List<Actividad>>(result);
+            return actividades;
         }
     }
 }

@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ClubNet.Models.DTO
+namespace ClubNet.Models
 {
-    public class ActividadDTO
+    public class Actividad
     {
+        public int Actividad_id { get; set; }
         public string? Nombre { get; set; }
         public string? Descripcion { get; set; }
         public int Cupo { get; set; }
