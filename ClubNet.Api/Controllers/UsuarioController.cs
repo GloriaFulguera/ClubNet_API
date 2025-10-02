@@ -9,9 +9,9 @@ namespace ClubNet.Api.Controllers
     [ApiController]
     public class UsuarioController:ControllerBase
     {
-        private readonly IUsuariosRepository _usuarioService;
+        private readonly IUsuarioRepository _usuarioService;
 
-        public UsuarioController(IUsuariosRepository usuarioService)
+        public UsuarioController(IUsuarioRepository usuarioService)
         {
             _usuarioService = usuarioService;
         }
