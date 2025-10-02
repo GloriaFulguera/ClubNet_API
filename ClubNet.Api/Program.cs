@@ -15,7 +15,8 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(builder => {
 
 PostgresHandler.ConnectionString = builder.Configuration.GetConnectionString("defaultConnection");
 builder.Services.AddSingleton<ILoginRepository, LoginService>();
-builder.Services.AddSingleton<IUsuariosRepository, UsuarioService>();
+builder.Services.AddSingleton<IUsuarioRepository, UsuarioService>();
+builder.Services.AddSingleton<IActividadRepository, ActividadService>();
 
 var app = builder.Build();
 
