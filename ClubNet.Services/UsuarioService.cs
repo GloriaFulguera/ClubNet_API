@@ -1,4 +1,5 @@
 ﻿
+using ClubNet.Models;
 using ClubNet.Models.DTO;
 using ClubNet.Services.Handlers;
 using ClubNet.Services.Repositories;
@@ -20,6 +21,14 @@ namespace ClubNet.Services
             List<UsuarioDTO> usuario = JsonConvert.DeserializeObject<List<UsuarioDTO>>(result);
 
             return usuario.FirstOrDefault();
+        }
+
+        public async Task<List<Rol>> GetRoles()
+        {
+            string query = "SELECT * FROM roles ORDER BY rol_id ASC;";
+            string result = PostgresHandler.GetJson(query);
+            List<Rol> roles = JsonConvert.DeserializeObject<List<Rol>>(result);
+            return roles;
         }
     }
 }

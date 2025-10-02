@@ -1,4 +1,5 @@
-﻿using ClubNet.Models.DTO;
+﻿using ClubNet.Models;
+using ClubNet.Models.DTO;
 using ClubNet.Services.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +19,11 @@ namespace ClubNet.Api.Controllers
         public async Task<UsuarioDTO> GetUsuarioById(int id)
         {
             return await Task.Run(() => _usuarioService.GetUsuarioById(id));
+        }
+        [HttpGet("GetRoles")]
+        public async Task<List<Rol>> GetRoles()
+        {
+            return await Task.Run(() => _usuarioService.GetRoles());
         }
     }
 }
