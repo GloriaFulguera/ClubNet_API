@@ -9,14 +9,14 @@ namespace ClubNet.Services
 {
     public class UsuarioService: IUsuarioRepository
     {
-        public async Task<UsuarioDTO> GetUsuarioById(int id)
+        public async Task<UsuarioDTO> GetUsuarioByEmail(string email)
         {
             string query = $"SELECT p.persona_id,p.nombre,p.apellido,p.dni,u.email,p.estado,p.rol_id FROM personas p " +
                 $"INNER JOIN rel_usuarios_personas up on up.persona_id = p.persona_id " +
                 $"LEFT JOIN usuarios u on u.user_id = up.user_id " +
-                $"WHERE p.persona_id = @id;";
+                $"WHERE u.email = @email;";
 
-            string result = PostgresHandler.GetJson(query, ("id", id));
+            string result = PostgresHandler.GetJson(query, ("email", email));
 
             List<UsuarioDTO> usuario = JsonConvert.DeserializeObject<List<UsuarioDTO>>(result);
 

@@ -5,7 +5,7 @@ namespace ClubNet.Services.Repositories
 {
     public interface IUsuarioRepository
     {
-        public Task<UsuarioDTO> GetUsuarioById(int id);
+        public Task<UsuarioDTO> GetUsuarioByEmail(string Email);
         public Task<List<Rol>> GetRoles();
     }
 }

@@ -16,9 +16,9 @@ namespace ClubNet.Api.Controllers
             _usuarioService = usuarioService;
         }
         [HttpGet("GetUsuario")]
-        public async Task<UsuarioDTO> GetUsuarioById(int id)
+        public async Task<UsuarioDTO> GetUsuarioByEmail(string email)
         {
-            return await Task.Run(() => _usuarioService.GetUsuarioById(id));
+            return await Task.Run(() => _usuarioService.GetUsuarioByEmail(email));
         }
         [HttpGet("GetRoles")]
         public async Task<List<Rol>> GetRoles()
