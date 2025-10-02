@@ -9,15 +9,25 @@ namespace ClubNet.Services
     {
         public async Task<ApiResponse> Login(LoginDTO login)
         {
-            string query = $"SELECT COUNT (*) as Existe FROM Usuarios WHERE Email = @email and Clave = @clave";
-            string resultado = PostgresHandler.GetScalar(query, ("email", login.Email), ("clave", login.Clave));
+            string query = "SELECT Clave FROM Usuarios WHERE Email = @email";
+            string? hash = PostgresHandler.GetScalar(query, ("email", login.Email));
 
             ApiResponse loginResult = new ApiResponse();
 
-            if (resultado == "0")
+            if (hash == null)
             {
                 loginResult.Success = false;
-                loginResult.Message = "Credenciales invalidas o usuario inexistente.";
+                loginResult.Message = "Usuario inexistente.";
+                return loginResult;
+            }
+
+            // Comparar la contraseña en crudo contra el hash almacenado
+            bool validPassword = BCrypt.Net.BCrypt.Verify(login.Clave, hash);
+
+            if (!validPassword)
+            {
+                loginResult.Success = false;
+                loginResult.Message = "Credenciales inválidas.";
             }
             else
             {
@@ -28,12 +38,13 @@ namespace ClubNet.Services
             return loginResult;
         }
 
+
         public async Task<ApiResponse> Register(RegisterDTO register)
         {
             ApiResponse response = new ApiResponse();
 
             string query = "CALL public.SP_REGISTRAR_USUARIO(@p_email::varchar,@p_calve::varchar,@p_nombre::varchar,@p_apellido::varchar,@p_dni,@p_rol)";
-            string hash=BCrypt.Net.BCrypt.HashPassword(register.Clave);
+            string? hash=BCrypt.Net.BCrypt.HashPassword(register.Clave);
 
             bool result = PostgresHandler.Exec(query, 
                 ("p_email", register.Email), 
