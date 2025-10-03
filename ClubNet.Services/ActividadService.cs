@@ -5,14 +5,14 @@ using Newtonsoft.Json;
 
 namespace ClubNet.Services
 {
-    public class ActividadService:IActividadRepository
+    public class ActividadService : IActividadRepository
     {
         public async Task<ApiResponse> CreateActividad(Actividad actividad)
         {
             ApiResponse createResult = new ApiResponse();
             string query = $"INSERT INTO actividades(nombre,descripcion,cupo,estado,cuota_valor,url_imagen) " +
                 $"VALUES (@nombre,@descripcion,@cupo,@estado,@cuota_valor,@url_imagen)";
-            bool result= PostgresHandler.Exec(query,
+            bool result = PostgresHandler.Exec(query,
                 ("nombre", actividad.Nombre),
                 ("descripcion", actividad.Descripcion),
                 ("cupo", actividad.Cupo),
@@ -33,6 +33,25 @@ namespace ClubNet.Services
             string result = PostgresHandler.GetJson(query);
             List<Actividad> actividades = JsonConvert.DeserializeObject<List<Actividad>>(result);
             return actividades;
+        }
+
+        public async Task<ApiResponse> UpdateActividad(Actividad actividad)
+        {
+            ApiResponse updateResult = new ApiResponse();
+            string query = $"UPDATE actividades SET nombre=@nombre, descripcion=@descripcion, cupo=@cupo, " +
+                $"estado=@estado, cuota_valor=@cuota_valor, url_imagen=@url_imagen WHERE actividad_id=@id";
+            bool result = PostgresHandler.Exec(query,
+                ("nombre", actividad.Nombre),
+                ("descripcion", actividad.Descripcion),
+                ("cupo", actividad.Cupo),
+                ("estado", actividad.Estado),
+                ("cuota_valor", actividad.Cuota_valor),
+                ("url_imagen", actividad.Url_imagen),
+                ("id", actividad.Actividad_id));
+            updateResult.Success = result;
+            if (!result)
+                updateResult.Message = "Ocurrio un problema al actualizar la actividad, contacte al administrador.";
+            return updateResult;
         }
     }
 }

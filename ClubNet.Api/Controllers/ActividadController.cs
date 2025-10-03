@@ -26,5 +26,12 @@ namespace ClubNet.Api.Controllers
         {
             return await Task.Run(() => _actividadService.GetActividades());
         }
+
+        [HttpPost("UpdateActividad")]
+        public async Task<ApiResponse> UpdateActividad(Actividad actividad)
+        {
+            return await Task.Run(() => _actividadService.UpdateActividad(actividad));
+        }
+
     }
 }
