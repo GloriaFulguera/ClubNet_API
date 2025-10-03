@@ -53,5 +53,13 @@ namespace ClubNet.Services
                 updateResult.Message = "Ocurrio un problema al actualizar la actividad, contacte al administrador.";
             return updateResult;
         }
+
+        public async Task<Actividad> GetActividadById(int actividadId)
+        {
+            string query = $"SELECT * FROM actividades WHERE actividad_id=@id";
+            string result = PostgresHandler.GetJson(query, ("id", actividadId));
+            List<Actividad> actividades = JsonConvert.DeserializeObject<List<Actividad>>(result);
+            return actividades.FirstOrDefault();
+        }
     }
 }
