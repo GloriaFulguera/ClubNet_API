@@ -7,5 +7,7 @@ namespace ClubNet.Services.Repositories
     {
         public Task<UsuarioDTO> GetUsuarioByEmail(string Email);
         public Task<List<Rol>> GetRoles();
+        public Task<ApiResponse> UpdateUsuario(UsuarioDTO usuario);
+        public Task<ApiResponse> CreateUser(RegisterDTO usuario);
     }
 }
