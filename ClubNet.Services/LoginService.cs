@@ -2,44 +2,107 @@
 using ClubNet.Models.DTO;
 using ClubNet.Services.Handlers;
 using ClubNet.Services.Repositories;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace ClubNet.Services
 {
     public class LoginService : ILoginRepository
     {
-        public async Task<ApiResponse> Login(LoginDTO login)
-        {
-            string query = "SELECT Clave FROM Usuarios WHERE Email = @email";
-            string? hash = PostgresHandler.GetScalar(query, ("email", login.Email));
+        private readonly IConfiguration _config;
 
-            ApiResponse loginResult = new ApiResponse();
+        public LoginService(IConfiguration config)
+        {
+            _config = config;
+        }
+
+        public Task<ApiResponse> Login(LoginDTO login)
+        {
+            var loginResult = new ApiResponse();
+
+            // 1) Obtener hash de la DB (usando tu PostgresHandler existente)
+            string queryHash = "SELECT Clave FROM Usuarios WHERE Email = @email";
+            string? hash = PostgresHandler.GetScalar(queryHash, ("email", login.Email));
 
             if (hash == null)
             {
                 loginResult.Success = false;
                 loginResult.Message = "Usuario inexistente.";
-                return loginResult;
+                return Task.FromResult(loginResult);
             }
 
-            // Comparar la contraseña en crudo contra el hash almacenado
+            // 2) Verificar contraseña
             bool validPassword = BCrypt.Net.BCrypt.Verify(login.Clave, hash);
-
             if (!validPassword)
             {
                 loginResult.Success = false;
                 loginResult.Message = "Credenciales inválidas.";
-            }
-            else
-            {
-                loginResult.Success = true;
-                loginResult.Message = "Usuario validado correctamente.";
+                return Task.FromResult(loginResult);
             }
 
-            return loginResult;
+            // 3) Obtener rol y nombre (consultas separadas porque no existe GetRow)
+            string queryRol = "SELECT Rol FROM Usuarios WHERE Email = @email";
+            string? rol = PostgresHandler.GetScalar(queryRol, ("email", login.Email));
+            if (rol == null) rol = "0";
+
+            string queryNombre = "SELECT Nombre FROM Usuarios WHERE Email = @email";
+            string? nombre = PostgresHandler.GetScalar(queryNombre, ("email", login.Email)) ?? string.Empty;
+
+            // 4) Generar JWT
+            string token;
+            try
+            {
+                token = GenerateJwtToken(login.Email, rol, nombre);
+            }
+            catch (Exception ex)
+            {
+                loginResult.Success = false;
+                loginResult.Message = "Error generando token: " + ex.Message;
+                return Task.FromResult(loginResult);
+            }
+
+            // 5) Devolver respuesta con token en Data
+            loginResult.Success = true;
+            loginResult.Message = "Usuario validado correctamente.";
+            loginResult.Data = new { token }; // requiere que ApiResponse tenga la propiedad Data
+
+            return Task.FromResult(loginResult);
         }
 
+        private string GenerateJwtToken(string email, string rol, string nombre)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Email, email ?? string.Empty),
+                new Claim(ClaimTypes.Role, rol ?? string.Empty),
+                new Claim(ClaimTypes.Name, nombre ?? string.Empty)
+            };
 
-        public async Task<ApiResponse> Register(RegisterDTO register)
+            var keyString = _config["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key no configurado en appsettings.json");
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            double minutes = 60;
+            if (!double.TryParse(_config["Jwt:ExpiresInMinutes"], out minutes))
+            {
+                minutes = 60;
+            }
+
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(minutes),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public Task<ApiResponse> Register(RegisterDTO register)
         {
             ApiResponse result = new ApiResponse();
             string query = "CALL public.SP_ALTA_USUARIO(@p_email::varchar,@p_calve::varchar,@p_nombre::varchar,@p_apellido::varchar,@p_dni,@p_rol)";
@@ -56,8 +119,7 @@ namespace ClubNet.Services
             if (!resultExec)
                 result.Message = "Ocurrio un problema al registrar el usuario, contacte al administrador.";
 
-            return result;
+            return Task.FromResult(result);
         }
-
     }
 }

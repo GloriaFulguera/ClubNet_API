@@ -1,11 +1,13 @@
 ﻿using ClubNet.Models;
 using ClubNet.Services.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClubNet.Api.Controllers
 {
     [Route("api/actividad")]
     [ApiController]
+    [Authorize]
     public class ActividadController : ControllerBase
     {
         private readonly IActividadRepository _actividadService;
