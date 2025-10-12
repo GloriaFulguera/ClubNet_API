@@ -9,5 +9,6 @@ namespace ClubNet.Services.Repositories
         public Task<List<Actividad>> GetActividades();
         public Task<ApiResponse> UpdateActividad(Actividad actividad);
         public Task<Actividad> GetActividadById(int actividadId);
+        public Task<ApiResponse> DeleteActividad(Actividad actividad);
     }
 }

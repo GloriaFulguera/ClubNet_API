@@ -23,7 +23,7 @@ namespace ClubNet.Services
         {
             var loginResult = new ApiResponse();
 
-            // 1) Obtener hash de la DB (usando tu PostgresHandler existente)
+            // 1) Obtener hash de la DB (usando PostgresHandler)
             string queryHash = "SELECT Clave FROM Usuarios WHERE Email = @email";
             string? hash = PostgresHandler.GetScalar(queryHash, ("email", login.Email));
 

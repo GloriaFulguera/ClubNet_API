@@ -8,6 +8,7 @@ namespace ClubNet.Api.Controllers
     [Route("api/actividad")]
     [ApiController]
     [Authorize]
+    
     public class ActividadController : ControllerBase
     {
         private readonly IActividadRepository _actividadService;
@@ -29,10 +30,16 @@ namespace ClubNet.Api.Controllers
             return await Task.Run(() => _actividadService.GetActividades());
         }
 
-        [HttpPost("UpdateActividad")]
+        [HttpPut("UpdateActividad")]
         public async Task<ApiResponse> UpdateActividad(Actividad actividad)
         {
             return await Task.Run(() => _actividadService.UpdateActividad(actividad));
+        }
+
+        [HttpDelete("DeleteActividad")]
+        public async Task<ApiResponse> DeleteActividad(Actividad actividad)
+        {
+            return await Task.Run(() => _actividadService.DeleteActividad(actividad));
         }
 
         [HttpGet("GetActividadById/{id}")]
