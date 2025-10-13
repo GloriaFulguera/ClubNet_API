@@ -7,7 +7,7 @@ namespace ClubNet.Api.Controllers
 {
     [Route("api/actividad")]
     [ApiController]
-    [Authorize]
+    
     
     public class ActividadController : ControllerBase
     {
@@ -37,9 +37,10 @@ namespace ClubNet.Api.Controllers
         }
 
         [HttpDelete("DeleteActividad")]
-        public async Task<ApiResponse> DeleteActividad(Actividad actividad)
+        public async Task<IActionResult> DeleteActividad(int id)
         {
-            return await Task.Run(() => _actividadService.DeleteActividad(actividad));
+            var result = await _actividadService.DeleteActividad(id);
+            return Ok(result);
         }
 
         [HttpGet("GetActividadById/{id}")]

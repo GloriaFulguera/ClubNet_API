@@ -62,21 +62,17 @@ namespace ClubNet.Services
             return actividades.FirstOrDefault();
         }
 
-        public async Task<ApiResponse> DeleteActividad(Actividad actividad)
+        public async Task<ApiResponse> DeleteActividad(int id)
         {
             ApiResponse deleteResult = new ApiResponse();
-            string query = $"DELETE FROM actividades WHERE actividad_id=@id";
-            bool result = PostgresHandler.Exec(query,
-                ("nombre", actividad.Nombre),
-                ("descripcion", actividad.Descripcion),
-                ("cupo", actividad.Cupo),
-                ("estado", actividad.Estado),
-                ("cuota_valor", actividad.Cuota_valor),
-                ("url_imagen", actividad.Url_imagen),
-                ("id", actividad.Actividad_id));
+            string query = "DELETE FROM actividades WHERE actividad_id=@id";
+
+            bool result = PostgresHandler.Exec(query, ("id", id));
+
             deleteResult.Success = result;
             if (!result)
-                deleteResult.Message = "Ocurrio un problema al eliminar la actividad";
+                deleteResult.Message = "Ocurrió un problema al eliminar la actividad.";
+
             return deleteResult;
         }
 

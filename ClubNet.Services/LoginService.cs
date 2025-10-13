@@ -43,7 +43,7 @@ namespace ClubNet.Services
                 return Task.FromResult(loginResult);
             }
 
-            // 3) Obtener rol y nombre (consultas separadas porque no existe GetRow)
+            // 3) Obtener rol y nombre
             string queryRol = "SELECT Rol FROM Usuarios WHERE Email = @email";
             string? rol = PostgresHandler.GetScalar(queryRol, ("email", login.Email));
             if (rol == null) rol = "0";
@@ -72,6 +72,7 @@ namespace ClubNet.Services
             return Task.FromResult(loginResult);
         }
 
+        // 
         private string GenerateJwtToken(string email, string rol, string nombre)
         {
             var claims = new List<Claim>
