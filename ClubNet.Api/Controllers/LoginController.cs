@@ -17,15 +17,23 @@ namespace ClubNet.Api.Controllers
         }
 
         [HttpPost("Register")]
-        public async Task<ApiResponse> Registro(RegisterDTO usuario)
+        public IActionResult Registro(RegisterDTO usuario)
         {
-            return await Task.Run(() => _loginService.Register(usuario));
+            var result = _loginService.Register(usuario);
+            if(result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
         }
 
         [HttpPost("Login")]
-        public async Task<ApiResponse> Login(LoginDTO usuario)
+        public IActionResult Login(LoginDTO usuario)
         {
-            return await Task.Run(() => _loginService.Login(usuario));
+            var result= _loginService.Login(usuario);
+            if(result.Success)
+                return Ok(result);
+            else
+                return Unauthorized(result);
         }
     }
 }

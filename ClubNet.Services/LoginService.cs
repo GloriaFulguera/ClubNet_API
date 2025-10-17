@@ -19,9 +19,9 @@ namespace ClubNet.Services
             _config = config;
         }
 
-        public Task<ApiResponse> Login(LoginDTO login)
+        public ApiResponse<string> Login(LoginDTO login)
         {
-            var loginResult = new ApiResponse();
+            var loginResult = new ApiResponse<string>();
 
             // 1) Obtener hash de la DB (usando PostgresHandler)
             string queryHash = "SELECT Clave FROM Usuarios WHERE Email = @email";
@@ -31,7 +31,7 @@ namespace ClubNet.Services
             {
                 loginResult.Success = false;
                 loginResult.Message = "Usuario inexistente.";
-                return Task.FromResult(loginResult);
+                return loginResult;
             }
 
             // 2) Verificar contraseña
@@ -40,7 +40,7 @@ namespace ClubNet.Services
             {
                 loginResult.Success = false;
                 loginResult.Message = "Credenciales inválidas.";
-                return Task.FromResult(loginResult);
+                return loginResult;
             }
 
             // 3) Obtener rol y nombre
@@ -61,15 +61,15 @@ namespace ClubNet.Services
             {
                 loginResult.Success = false;
                 loginResult.Message = "Error generando token: " + ex.Message;
-                return Task.FromResult(loginResult);
+                return loginResult;
             }
 
             // 5) Devolver respuesta con token en Data
             loginResult.Success = true;
             loginResult.Message = "Usuario validado correctamente.";
-            loginResult.Data = new { token }; // requiere que ApiResponse tenga la propiedad Data
+            loginResult.Data = token; 
 
-            return Task.FromResult(loginResult);
+            return loginResult;
         }
 
         // 
@@ -103,13 +103,13 @@ namespace ClubNet.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public Task<ApiResponse> Register(RegisterDTO register)
+        public ApiResponse Register(RegisterDTO register)
         {
             ApiResponse result = new ApiResponse();
-            string query = "CALL public.SP_ALTA_USUARIO(@p_email::varchar,@p_calve::varchar,@p_nombre::varchar,@p_apellido::varchar,@p_dni,@p_rol)";
+            string query = "CALL public.SP_ALTA_USUARIO(@p_email::varchar,@p_clave::varchar,@p_nombre::varchar,@p_apellido::varchar,@p_dni,@p_rol)";
             bool resultExec = PostgresHandler.Exec(query,
                 ("p_email", register.Email),
-                ("p_calve", BCrypt.Net.BCrypt.HashPassword(register.Clave)),
+                ("p_clave", BCrypt.Net.BCrypt.HashPassword(register.Clave)),
                 ("p_nombre", register.Nombre),
                 ("p_apellido", register.Apellido),
                 ("p_dni", register.Dni),
@@ -117,10 +117,11 @@ namespace ClubNet.Services
             );
 
             result.Success = resultExec;
+            result.Message = "Usuario registrado correctamente.";
             if (!resultExec)
                 result.Message = "Ocurrio un problema al registrar el usuario, contacte al administrador.";
 
-            return Task.FromResult(result);
+            return result;
         }
     }
 }
