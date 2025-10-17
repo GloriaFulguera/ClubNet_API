@@ -10,8 +10,9 @@ namespace ClubNet.Services
 {
     public class UsuarioService : IUsuarioRepository
     {
-        public async Task<UsuarioDTO> GetUsuarioByEmail(string email)
+        public ApiResponse<UsuarioDTO> GetUsuarioByEmail(string email)
         {
+            ApiResponse<UsuarioDTO> getResult = new ApiResponse<UsuarioDTO>();
             string query = $"SELECT p.persona_id,p.nombre,p.apellido,p.dni,u.email,p.estado,p.rol_id FROM personas p " +
                 $"INNER JOIN rel_usuarios_personas up on up.persona_id = p.persona_id " +
                 $"LEFT JOIN usuarios u on u.user_id = up.user_id " +
@@ -20,19 +21,40 @@ namespace ClubNet.Services
             string result = PostgresHandler.GetJson(query, ("email", email));
 
             List<UsuarioDTO> usuario = JsonConvert.DeserializeObject<List<UsuarioDTO>>(result);
-
-            return usuario.FirstOrDefault();
+            if(usuario == null || usuario.Count == 0)
+            {
+                getResult.Success = false;
+                getResult.Message = "Usuario no encontrado.";
+            }
+            else
+            {
+                getResult.Success = true;
+                getResult.Data = usuario.FirstOrDefault();
+            }
+            return getResult;
         }
 
-        public async Task<List<Rol>> GetRoles()
+        public ApiResponse<List<Rol>> GetRoles()
         {
+            ApiResponse<List<Rol>> getResult = new ApiResponse<List<Rol>>();
             string query = "SELECT * FROM roles ORDER BY rol_id ASC;";
             string result = PostgresHandler.GetJson(query);
             List<Rol> roles = JsonConvert.DeserializeObject<List<Rol>>(result);
-            return roles;
+
+            if(roles == null)
+            {
+                getResult.Success = false;
+                getResult.Message = "Ocurrió un problema al obtener los roles.";
+            }
+            else
+            {
+                getResult.Success = true;
+                getResult.Data = roles;
+            }
+            return getResult;
         }
 
-        public async Task<ApiResponse> UpdateUsuario(UsuarioDTO usuario)
+        public ApiResponse UpdateUsuario(UsuarioDTO usuario)
         {
             ApiResponse result = new ApiResponse();
             string query = "UPDATE personas SET nombre = @nombre, apellido = @apellido, dni = @dni, estado = @estado, rol_id = @rol_id " +
@@ -53,7 +75,7 @@ namespace ClubNet.Services
             return result;
         }
 
-        public async Task<ApiResponse> CreateUser(RegisterDTO usuario)
+        public ApiResponse CreateUser(RegisterDTO usuario)
         {
             ApiResponse result = new ApiResponse();
             string query = "CALL public.SP_ALTA_USUARIO(@p_email::varchar,@p_calve::varchar,@p_nombre::varchar,@p_apellido::varchar,@p_dni,@p_rol)";

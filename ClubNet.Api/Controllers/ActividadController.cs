@@ -8,7 +8,6 @@ namespace ClubNet.Api.Controllers
     [Route("api/actividad")]
     [ApiController]
     
-    
     public class ActividadController : ControllerBase
     {
         private readonly IActividadRepository _actividadService;
@@ -19,34 +18,54 @@ namespace ClubNet.Api.Controllers
         }
 
         [HttpPost("CreateActividad")]
-        public async Task<ApiResponse> CreateActividad(Actividad actividad)
+        public IActionResult CreateActividad(Actividad actividad)
         {
-            return await Task.Run(() => _actividadService.CreateActividad(actividad));
+            var result = _actividadService.CreateActividad(actividad);
+
+            if(result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
         }
 
         [HttpGet("GetActividades")]
-        public async Task<List<Actividad>> GetActividades()
+        public IActionResult GetActividades()
         {
-            return await Task.Run(() => _actividadService.GetActividades());
+            var result = _actividadService.GetActividades();
+            if(result.Success)
+                return Ok(result.Data);
+            else
+                return BadRequest(result);
         }
 
         [HttpPut("UpdateActividad")]
-        public async Task<ApiResponse> UpdateActividad(Actividad actividad)
+        public IActionResult UpdateActividad(Actividad actividad)
         {
-            return await Task.Run(() => _actividadService.UpdateActividad(actividad));
+            var result = _actividadService.UpdateActividad(actividad);
+            if(result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
         }
 
         [HttpDelete("DeleteActividad")]
-        public async Task<IActionResult> DeleteActividad(int id)
+        public IActionResult DeleteActividad(int id)
         {
-            var result = await _actividadService.DeleteActividad(id);
-            return Ok(result);
+            var result = _actividadService.DeleteActividad(id);
+            if(result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
         }
 
         [HttpGet("GetActividadById/{id}")]
-        public async Task<Actividad> GetActividadById(int id)
+        public IActionResult GetActividadById(int id)
         {
-            return await Task.Run(() => _actividadService.GetActividadById(id));
+            var result = _actividadService.GetActividadById(id);
+            if(result.Success)
+                return Ok(result.Data);
+            else
+                return BadRequest(result);
         }
     }
 }
