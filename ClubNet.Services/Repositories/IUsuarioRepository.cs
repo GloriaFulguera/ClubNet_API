@@ -5,9 +5,9 @@ namespace ClubNet.Services.Repositories
 {
     public interface IUsuarioRepository
     {
-        public Task<UsuarioDTO> GetUsuarioByEmail(string Email);
-        public Task<List<Rol>> GetRoles();
-        public Task<ApiResponse> UpdateUsuario(UsuarioDTO usuario);
-        public Task<ApiResponse> CreateUser(RegisterDTO usuario);
+        public ApiResponse<UsuarioDTO> GetUsuarioByEmail(string Email);
+        public ApiResponse<List<Rol>> GetRoles();
+        public ApiResponse UpdateUsuario(UsuarioDTO usuario);
+        public ApiResponse CreateUser(RegisterDTO usuario);
     }
 }

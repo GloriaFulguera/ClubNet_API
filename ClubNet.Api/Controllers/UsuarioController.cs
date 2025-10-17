@@ -17,27 +17,43 @@ namespace ClubNet.Api.Controllers
         }
 
         [HttpGet("GetUsuario")]
-        public async Task<UsuarioDTO> GetUsuarioByEmail(string email)
+        public IActionResult GetUsuarioByEmail(string email)
         {
-            return await Task.Run(() => _usuarioService.GetUsuarioByEmail(email));
+            var result= _usuarioService.GetUsuarioByEmail(email);
+            if(result.Success)
+                return Ok(result.Data);
+            else
+                return BadRequest(result);
         }
 
         [HttpGet("GetRoles")]
-        public async Task<List<Rol>> GetRoles()
+        public IActionResult GetRoles()
         {
-            return await Task.Run(() => _usuarioService.GetRoles());
+            var result= _usuarioService.GetRoles();
+            if(result.Success)
+                return Ok(result.Data);
+            else
+                return BadRequest(result);
         }
 
         [HttpPost("UpdateUsuario")]
-        public async Task<ApiResponse> UpdateUsuario(UsuarioDTO usuario)
+        public IActionResult UpdateUsuario(UsuarioDTO usuario)
         {
-            return await Task.Run(() => _usuarioService.UpdateUsuario(usuario));
+            var result= _usuarioService.UpdateUsuario(usuario);
+            if(result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
         }
 
         [HttpPost("CreateUser")]
-        public async Task<ApiResponse> CreateUser(RegisterDTO usuario)
+        public IActionResult CreateUser(RegisterDTO usuario)
         {
-            return await Task.Run(() => _usuarioService.CreateUser(usuario));
+            var result= _usuarioService.CreateUser(usuario);
+            if(result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
         }
     }
 }
