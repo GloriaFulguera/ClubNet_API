@@ -7,7 +7,7 @@ namespace ClubNet.Services
 {
     public class ActividadService : IActividadRepository
     {
-        public async Task<ApiResponse> CreateActividad(Actividad actividad)
+        public ApiResponse CreateActividad(Actividad actividad)
         {
             ApiResponse createResult = new ApiResponse();
             string query = $"INSERT INTO actividades(nombre,descripcion,cupo,estado,cuota_valor,url_imagen) " +
@@ -27,19 +27,32 @@ namespace ClubNet.Services
             return createResult;
         }
 
-        public async Task<List<Actividad>> GetActividades()
+        public ApiResponse<List<Actividad>> GetActividades()
         {
+            ApiResponse<List<Actividad>> getResult = new ApiResponse<List<Actividad>>();
             string query = "SELECT * FROM actividades ORDER BY actividad_id ASC;";
             string result = PostgresHandler.GetJson(query);
             List<Actividad> actividades = JsonConvert.DeserializeObject<List<Actividad>>(result);
-            return actividades;
+            getResult.Data = actividades;
+
+            if (actividades == null)
+            {
+                getResult.Success = false;
+                getResult.Message = "Ocurrió un problema al obtener las actividades.";
+            }
+            else
+                getResult.Success = true;
+
+            return getResult;
         }
 
-        public async Task<ApiResponse> UpdateActividad(Actividad actividad)
+        public ApiResponse UpdateActividad(Actividad actividad)
         {
             ApiResponse updateResult = new ApiResponse();
+
             string query = $"UPDATE actividades SET nombre=@nombre, descripcion=@descripcion, cupo=@cupo, " +
                 $"estado=@estado, cuota_valor=@cuota_valor, url_imagen=@url_imagen WHERE actividad_id=@id";
+
             bool result = PostgresHandler.Exec(query,
                 ("nombre", actividad.Nombre),
                 ("descripcion", actividad.Descripcion),
@@ -48,21 +61,37 @@ namespace ClubNet.Services
                 ("cuota_valor", actividad.Cuota_valor),
                 ("url_imagen", actividad.Url_imagen),
                 ("id", actividad.Actividad_id));
+
             updateResult.Success = result;
+
             if (!result)
                 updateResult.Message = "Ocurrio un problema al actualizar la actividad, contacte al administrador.";
+
             return updateResult;
         }
 
-        public async Task<Actividad> GetActividadById(int actividadId)
+        public ApiResponse<Actividad> GetActividadById(int actividadId)
         {
+            ApiResponse<Actividad> getResult = new ApiResponse<Actividad>();
             string query = $"SELECT * FROM actividades WHERE actividad_id=@id";
             string result = PostgresHandler.GetJson(query, ("id", actividadId));
+
             List<Actividad> actividades = JsonConvert.DeserializeObject<List<Actividad>>(result);
-            return actividades.FirstOrDefault();
+
+            if (actividades == null || actividades.Count == 0)
+            {
+                getResult.Success = false;
+                getResult.Message = "No se encontró la actividad.";
+            }
+            else
+            {
+                getResult.Success = true;
+                getResult.Data = actividades.FirstOrDefault();
+            }
+            return getResult;
         }
 
-        public async Task<ApiResponse> DeleteActividad(int id)
+        public ApiResponse DeleteActividad(int id)
         {
             ApiResponse deleteResult = new ApiResponse();
             string query = "DELETE FROM actividades WHERE actividad_id=@id";

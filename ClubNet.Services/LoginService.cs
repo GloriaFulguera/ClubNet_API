@@ -72,7 +72,6 @@ namespace ClubNet.Services
             return loginResult;
         }
 
-        // 
         private string GenerateJwtToken(string email, string rol, string nombre)
         {
             var claims = new List<Claim>
