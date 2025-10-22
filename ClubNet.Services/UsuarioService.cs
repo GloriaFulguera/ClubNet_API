@@ -21,7 +21,7 @@ namespace ClubNet.Services
             string result = PostgresHandler.GetJson(query, ("email", email));
 
             List<UsuarioDTO> usuario = JsonConvert.DeserializeObject<List<UsuarioDTO>>(result);
-            if(usuario == null || usuario.Count == 0)
+            if (usuario == null || usuario.Count == 0)
             {
                 getResult.Success = false;
                 getResult.Message = "Usuario no encontrado.";
@@ -41,7 +41,7 @@ namespace ClubNet.Services
             string result = PostgresHandler.GetJson(query);
             List<Rol> roles = JsonConvert.DeserializeObject<List<Rol>>(result);
 
-            if(roles == null)
+            if (roles == null)
             {
                 getResult.Success = false;
                 getResult.Message = "Ocurrió un problema al obtener los roles.";
@@ -78,10 +78,10 @@ namespace ClubNet.Services
         public ApiResponse CreateUser(RegisterDTO usuario)
         {
             ApiResponse result = new ApiResponse();
-            string query = "CALL public.SP_ALTA_USUARIO(@p_email::varchar,@p_calve::varchar,@p_nombre::varchar,@p_apellido::varchar,@p_dni,@p_rol)";
+            string query = "CALL public.SP_ALTA_USUARIO(@p_email::varchar,@p_clave::varchar,@p_nombre::varchar,@p_apellido::varchar,@p_dni,@p_rol)";
             bool resultExec = PostgresHandler.Exec(query,
                 ("p_email", usuario.Email),
-                ("p_calve", BCrypt.Net.BCrypt.HashPassword(usuario.Clave)),
+                ("p_clave", BCrypt.Net.BCrypt.HashPassword(usuario.Clave)),
                 ("p_nombre", usuario.Nombre),
                 ("p_apellido", usuario.Apellido),
                 ("p_dni", usuario.Dni),
@@ -91,6 +91,21 @@ namespace ClubNet.Services
             result.Success = resultExec;
             if (!resultExec)
                 result.Message = "Ocurrio un problema al registrar el usuario, contacte al administrador.";
+
+            return result;
+        }
+
+        public ApiResponse RegisterToActivity(RegisterToActivityDTO registro)
+        {
+            ApiResponse result = new ApiResponse();
+
+            string query = "CALL SP_ALTA_USUARIO_ACTIVIDAD(@p_dni,@p_actividadid)";
+            bool resultExec = PostgresHandler.Exec(query,
+                ("p_dni", registro.Dni),
+                ("p_actividadid", registro.Actividad_id)
+                );
+            result.Success = resultExec;
+            if (!resultExec) result.Message = "Ocurrio un problema durante la inscripción.";
 
             return result;
         }

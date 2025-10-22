@@ -7,7 +7,7 @@ namespace ClubNet.Api.Controllers
 {
     [Route("api/usuario")]
     [ApiController]
-    public class UsuarioController:ControllerBase
+    public class UsuarioController : ControllerBase
     {
         private readonly IUsuarioRepository _usuarioService;
 
@@ -19,8 +19,8 @@ namespace ClubNet.Api.Controllers
         [HttpGet("GetUsuario")]
         public IActionResult GetUsuarioByEmail(string email)
         {
-            var result= _usuarioService.GetUsuarioByEmail(email);
-            if(result.Success)
+            var result = _usuarioService.GetUsuarioByEmail(email);
+            if (result.Success)
                 return Ok(result.Data);
             else
                 return BadRequest(result);
@@ -29,8 +29,8 @@ namespace ClubNet.Api.Controllers
         [HttpGet("GetRoles")]
         public IActionResult GetRoles()
         {
-            var result= _usuarioService.GetRoles();
-            if(result.Success)
+            var result = _usuarioService.GetRoles();
+            if (result.Success)
                 return Ok(result.Data);
             else
                 return BadRequest(result);
@@ -39,8 +39,8 @@ namespace ClubNet.Api.Controllers
         [HttpPost("UpdateUsuario")]
         public IActionResult UpdateUsuario(UsuarioDTO usuario)
         {
-            var result= _usuarioService.UpdateUsuario(usuario);
-            if(result.Success)
+            var result = _usuarioService.UpdateUsuario(usuario);
+            if (result.Success)
                 return Ok(result);
             else
                 return BadRequest(result);
@@ -49,8 +49,18 @@ namespace ClubNet.Api.Controllers
         [HttpPost("CreateUser")]
         public IActionResult CreateUser(RegisterDTO usuario)
         {
-            var result= _usuarioService.CreateUser(usuario);
-            if(result.Success)
+            var result = _usuarioService.CreateUser(usuario);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
+        [HttpPost("RegisterToActivity")]
+        public IActionResult RegisterToActivity(RegisterToActivityDTO registro)
+        {
+            var result = _usuarioService.RegisterToActivity(registro);
+            if (result.Success)
                 return Ok(result);
             else
                 return BadRequest(result);
