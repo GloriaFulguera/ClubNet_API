@@ -20,6 +20,7 @@ PostgresHandler.ConnectionString = builder.Configuration.GetConnectionString("de
 builder.Services.AddSingleton<ILoginRepository, LoginService>();
 builder.Services.AddSingleton<IUsuarioRepository, UsuarioService>();
 builder.Services.AddSingleton<IActividadRepository, ActividadService>();
+builder.Services.AddSingleton<IClasesRepository, ClaseService>();
 
 // JWT setup
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
