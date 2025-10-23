@@ -26,13 +26,12 @@ namespace ClubNet.Services
             return response;
         }
 
-        public ApiResponse UpdateClase(ClaseDTO clase)
+        public ApiResponse UpdateClase(UpdateClaseDTO clase)
         {
             ApiResponse response = new ApiResponse();
-            string query = $"UPDATE clases SET actividad_id=@actividad_id, titulo=@titulo, detalle=@detalle " +
+            string query = $"UPDATE clases SET titulo=@titulo, detalle=@detalle " +
                 $"WHERE clase_id=@clase_id";
             bool result = PostgresHandler.Exec(query,
-                ("actividad_id", clase.Actividad_id),
                 ("titulo", clase.Titulo),
                 ("detalle", clase.Detalle),
                 ("clase_id", clase.Clase_id));

@@ -26,7 +26,7 @@ namespace ClubNet.Api.Controllers
         }
 
         [HttpPut("UpdateClase")]
-        public IActionResult UpdateClase(ClaseDTO clase)
+        public IActionResult UpdateClase(UpdateClaseDTO clase)
         {
             var result = _claseService.UpdateClase(clase);
             if (result.Success)
