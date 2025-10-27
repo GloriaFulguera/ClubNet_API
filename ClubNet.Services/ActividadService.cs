@@ -94,13 +94,20 @@ namespace ClubNet.Services
         public ApiResponse DeleteActividad(int id)
         {
             ApiResponse deleteResult = new ApiResponse();
-            string query = "DELETE FROM actividades WHERE actividad_id=@id";
 
+            // 1. Eliminar clases asociadas a la actividad.
+            PostgresHandler.Exec("DELETE FROM clases WHERE actividad_id=@id", ("id", id));
+
+            // 2. Eliminar inscripciones de usuarios a esta actividad.
+            PostgresHandler.Exec("DELETE FROM rel_usuarios_actividades WHERE actividad_id=@id", ("id", id));
+
+            // 3. Eliminar la actividad principal.
+            string query = "DELETE FROM actividades WHERE actividad_id=@id";
             bool result = PostgresHandler.Exec(query, ("id", id));
 
             deleteResult.Success = result;
             if (!result)
-                deleteResult.Message = "Ocurrió un problema al eliminar la actividad.";
+                deleteResult.Message = "Ocurrio un problema al eliminar la actividad, contacte al administrador.";
 
             return deleteResult;
         }
