@@ -27,8 +27,10 @@ namespace ClubNet.Services.Handlers
                 }
                 return true;
             }
-            catch (Exception)
+            // Registrar la excepción completa para saber el error detallado
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error en la ejecución de SQL: {ex.Message}");
                 return false;
             }
         }
