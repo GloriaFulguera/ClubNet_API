@@ -10,12 +10,13 @@ namespace ClubNet.Services
         public ApiResponse CreateActividad(Actividad actividad)
         {
             ApiResponse createResult = new ApiResponse();
-            string query = $"INSERT INTO actividades(nombre,descripcion,cupo,estado,cuota_valor,url_imagen) " +
-                $"VALUES (@nombre,@descripcion,@cupo,@estado,@cuota_valor,@url_imagen)";
+            string query = $"INSERT INTO actividades(nombre,descripcion,cupo,inicio,estado,cuota_valor,url_imagen) " +
+                $"VALUES (@nombre,@descripcion,@cupo,@inicio,@estado,@cuota_valor,@url_imagen)";
             bool result = PostgresHandler.Exec(query,
                 ("nombre", actividad.Nombre),
                 ("descripcion", actividad.Descripcion),
                 ("cupo", actividad.Cupo),
+                ("inicio", actividad.Inicio),
                 ("estado", actividad.Estado),
                 ("cuota_valor", actividad.Cuota_valor),
                 ("url_imagen", actividad.Url_imagen));
@@ -50,13 +51,14 @@ namespace ClubNet.Services
         {
             ApiResponse updateResult = new ApiResponse();
 
-            string query = $"UPDATE actividades SET nombre=@nombre, descripcion=@descripcion, cupo=@cupo, " +
+            string query = $"UPDATE actividades SET nombre=@nombre, descripcion=@descripcion, cupo=@cupo, inicio=@inicio " +
                 $"estado=@estado, cuota_valor=@cuota_valor, url_imagen=@url_imagen WHERE actividad_id=@id";
 
             bool result = PostgresHandler.Exec(query,
                 ("nombre", actividad.Nombre),
                 ("descripcion", actividad.Descripcion),
                 ("cupo", actividad.Cupo),
+                ("inicio", actividad.Inicio),
                 ("estado", actividad.Estado),
                 ("cuota_valor", actividad.Cuota_valor),
                 ("url_imagen", actividad.Url_imagen),
@@ -93,6 +95,7 @@ namespace ClubNet.Services
 
         public ApiResponse DeleteActividad(int id)
         {
+            //TO DO: Corregir, vamos a hacer baja lógica en vez de eliminar registros.
             ApiResponse deleteResult = new ApiResponse();
 
             // 1. Eliminar clases asociadas a la actividad.

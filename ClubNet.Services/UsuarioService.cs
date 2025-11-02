@@ -99,7 +99,7 @@ namespace ClubNet.Services
         {
             ApiResponse result = new ApiResponse();
 
-            string query = "CALL SP_ALTA_USUARIO_ACTIVIDAD(@p_dni,@p_actividadid)";
+            string query = "CALL SP_ALTA_INSCRIPCION(@p_dni,@p_actividadid)";
             bool resultExec = PostgresHandler.Exec(query,
                 ("p_dni", registro.Dni),
                 ("p_actividadid", registro.Actividad_id)
