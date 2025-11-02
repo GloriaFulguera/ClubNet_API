@@ -31,7 +31,7 @@ namespace ClubNet.Api.Controllers
         {
             var result = await _cobranzaService.NotificarStatus(estado.Data.Id);
 
-                return Ok(result.Data);
+            return Ok(result.Data);
 
         }
 
@@ -43,6 +43,12 @@ namespace ClubNet.Api.Controllers
         }
         [HttpGet("Failure")]
         public IActionResult Failure([FromQuery] PaymentResponse response)
+        {
+            Console.WriteLine(JsonConvert.SerializeObject(response));
+            return Ok(response);
+        }
+        [HttpGet("Pending")]
+        public IActionResult Pending([FromQuery] PaymentResponse response)
         {
             Console.WriteLine(JsonConvert.SerializeObject(response));
             return Ok(response);

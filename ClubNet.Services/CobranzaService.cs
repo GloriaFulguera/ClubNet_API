@@ -24,7 +24,7 @@ namespace ClubNet.Services
             ApiResponse<string> response = new ApiResponse<string>();
             try
             {
-                MercadoPagoConfig.AccessToken=_configuration["MercadoPago:AccessToken"];
+                MercadoPagoConfig.AccessToken = _configuration["MercadoPago:AccessToken"];
                 // Crea el objeto de request de la preference
                 var request = new PreferenceRequest
                 {
@@ -52,9 +52,10 @@ namespace ClubNet.Services
                         ExcludedPaymentMethods = [],
                         ExcludedPaymentTypes = []
                     },
+                    ExternalReference = solicitud.Inscripcion_id.ToString(),
                     ExpirationDateFrom = DateTime.Now,
                     ExpirationDateTo = DateTime.Now.AddMinutes(10),
-                    Expires= true
+                    Expires = true
                 };
 
                 // Crea la preferencia usando el client
@@ -78,23 +79,23 @@ namespace ClubNet.Services
             ApiResponse<ObtenerDetallePagoDTO> response = new ApiResponse<ObtenerDetallePagoDTO>();
             try
             {
-                var url = _configuration["MercadoPago:URL_GetPaymentInfo"]+"/payments/"+payment_id;
-                var client=new HttpClient();
+                var url = _configuration["MercadoPago:URL_GetPaymentInfo"] + "/payments/" + payment_id;
+                var client = new HttpClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _configuration["MercadoPago:AccessToken"]);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
 
-                var res= await client.GetAsync(url);
-                if(!res.IsSuccessStatusCode)
+                var res = await client.GetAsync(url);
+                if (!res.IsSuccessStatusCode)
                 {
                     response.Success = false;
                     response.Message = $"No se pudo obtener el detalle del pago id: {payment_id}";
                     return response;
                 }
 
-                var jsonResponse= await res.Content.ReadAsStringAsync();
+                var jsonResponse = await res.Content.ReadAsStringAsync();
 
-                var pagoDetalle= JsonConvert.DeserializeObject<ObtenerDetallePagoDTO>(jsonResponse);
+                var pagoDetalle = JsonConvert.DeserializeObject<ObtenerDetallePagoDTO>(jsonResponse);
 
                 response.Success = true;
                 response.Data = pagoDetalle;
