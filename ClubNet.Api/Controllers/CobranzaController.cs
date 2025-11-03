@@ -21,17 +21,16 @@ namespace ClubNet.Api.Controllers
         {
             var result = await _cobranzaService.CreatePreferences(solicitud);
             if (result.Success)
-                return Ok(result.Data);
+                return Ok(result);
             else
                 return BadRequest(result);
         }
 
         [HttpPost("NotificarStatus")]
-        public async Task<IActionResult> NotificarStatus(NotificarEstadoPagoDTO estado)
+        public IActionResult NotificarStatus(NotificarEstadoPagoDTO estado)
         {
-            var result = await _cobranzaService.NotificarStatus(estado.Data.Id);
-
-            return Ok(result.Data);
+            var result = _cobranzaService.NotificarStatus(estado.Data.Id);
+            return Ok();
 
         }
 

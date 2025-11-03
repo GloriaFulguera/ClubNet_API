@@ -1,5 +1,6 @@
 ﻿using ClubNet.Models;
 using ClubNet.Models.DTO;
+using ClubNet.Services.Handlers;
 using ClubNet.Services.Repositories;
 using MercadoPago.Client.Preference;
 using MercadoPago.Config;
@@ -74,7 +75,38 @@ namespace ClubNet.Services
             }
         }
 
-        public async Task<ApiResponse<ObtenerDetallePagoDTO>> NotificarStatus(string payment_id)
+        public ApiResponse NotificarStatus(string payment_id)
+        {
+            ApiResponse response = new ApiResponse();
+            try
+            {
+                string validacionQuery = "SELECT COUNT(*) FROM PagosPendientesVerificacion WHERE payment_id = @payment_id;";
+                string exists = PostgresHandler.GetScalar(validacionQuery, ("payment_id", payment_id));
+
+                if(exists == "0")
+                {
+                    string query = "INSERT INTO PagosPendientesVerificacion(payment_id) VALUES (@payment_id);";
+
+                    bool result = PostgresHandler.Exec(query, ("payment_id", payment_id));
+
+                    response.Success = result;
+
+                    if (result)
+                        response.Message = "notificacion de estado recibida correctamente.";
+                    else
+                        response.Message = "Error al registrar la notificacion de estado.";
+                }
+                return response;
+            }
+            catch
+            {
+                response.Success = false;
+                response.Message = "Ocurrio un error ejecutando NotificarStatus.";
+                return response;
+            }
+        }
+
+        public async Task<ApiResponse<ObtenerDetallePagoDTO>> ObtenerDetallePago(string payment_id)
         {
             ApiResponse<ObtenerDetallePagoDTO> response = new ApiResponse<ObtenerDetallePagoDTO>();
             try
