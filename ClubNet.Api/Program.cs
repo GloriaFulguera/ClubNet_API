@@ -56,7 +56,7 @@ app.UseSwaggerUI(c =>
 app.MapControllers();
 
 app.UseCors();
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthentication(); // 1. Autenticar (leer y validar el JWT)
 app.UseAuthorization();  // 2. Autorizar (verificar si el usuario tiene permiso)
 app.Run();
