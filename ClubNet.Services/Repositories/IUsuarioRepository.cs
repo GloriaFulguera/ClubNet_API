@@ -9,6 +9,6 @@ namespace ClubNet.Services.Repositories
         public ApiResponse<List<Rol>> GetRoles();
         public ApiResponse UpdateUsuario(UsuarioDTO usuario);
         public ApiResponse CreateUser(RegisterDTO usuario);
-        public ApiResponse RegisterToActivity(RegisterToActivityDTO registro);
+        public ApiResponse<int> RegisterToActivity(RegisterToActivityDTO registro);
     }
 }
