@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Data;
 
 namespace ClubNet.Services
 {
@@ -23,18 +24,38 @@ namespace ClubNet.Services
         {
             var loginResult = new ApiResponse<string>();
 
-            // 1) Obtener hash de la DB (usando PostgresHandler)
-            string queryHash = "SELECT Clave FROM Usuarios WHERE Email = @email";
-            string? hash = PostgresHandler.GetScalar(queryHash, ("email", login.Email));
+            // 1) Obtener hash, estado, rol_id y nombre en una sola consulta con JOIN
+            string queryAll = "SELECT u.Clave, p.estado, p.rol_id, p.nombre " +
+                              "FROM Usuarios u " +
+                              "INNER JOIN rel_usuarios_personas rup ON rup.user_id = u.user_id " +
+                              "INNER JOIN personas p ON p.persona_id = rup.persona_id " +
+                              "WHERE u.Email = @email";
 
-            if (hash == null)
+            // GetDt para manejar múltiples campos como 'estado'
+            DataTable userDataTable = PostgresHandler.GetDt(queryAll, ("email", login.Email));
+
+            if (userDataTable == null || userDataTable.Rows.Count == 0)
             {
                 loginResult.Success = false;
                 loginResult.Message = "Usuario inexistente.";
                 return loginResult;
             }
 
-            // 2) Verificar contraseña
+            DataRow userRow = userDataTable.Rows[0];
+            string? hash = userRow["clave"]?.ToString();
+            bool estado = (bool)userRow["estado"]; // Casteamos el estado
+            string? rol = userRow["rol_id"]?.ToString();
+            string? nombre = userRow["nombre"]?.ToString();
+
+            // 2) VERIFICACIÓN DE ESTADO: No permitir login si estado es false
+            if (!estado)
+            {
+                loginResult.Success = false;
+                loginResult.Message = "El usuario se encuentra inactivo. Contacte a un administrador.";
+                return loginResult;
+            }
+
+            // 3) Verificar contraseña
             bool validPassword = BCrypt.Net.BCrypt.Verify(login.Clave, hash);
             if (!validPassword)
             {
@@ -43,19 +64,11 @@ namespace ClubNet.Services
                 return loginResult;
             }
 
-            // 3) Obtener rol y nombre
-            string queryRol = "SELECT Rol FROM Usuarios WHERE Email = @email";
-            string? rol = PostgresHandler.GetScalar(queryRol, ("email", login.Email));
-            if (rol == null) rol = "0";
-
-            string queryNombre = "SELECT Nombre FROM Usuarios WHERE Email = @email";
-            string? nombre = PostgresHandler.GetScalar(queryNombre, ("email", login.Email)) ?? string.Empty;
-
-            // 4) Generar JWT
+            // 4) Generar JWT (si pasó todas las verificaciones)
             string token;
             try
             {
-                token = GenerateJwtToken(login.Email, rol, nombre);
+                token = GenerateJwtToken(login.Email, rol!, nombre!);
             }
             catch (Exception ex)
             {
@@ -67,7 +80,7 @@ namespace ClubNet.Services
             // 5) Devolver respuesta con token en Data
             loginResult.Success = true;
             loginResult.Message = "Usuario validado correctamente.";
-            loginResult.Data = token; 
+            loginResult.Data = token;
 
             return loginResult;
         }

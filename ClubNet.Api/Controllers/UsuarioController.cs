@@ -2,6 +2,7 @@
 using ClubNet.Models.DTO;
 using ClubNet.Services.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ClubNet.Api.Controllers
 {
@@ -27,6 +28,7 @@ namespace ClubNet.Api.Controllers
         }
 
         [HttpGet("GetRoles")]
+        [Authorize(Roles = "1")]
         public IActionResult GetRoles()
         {
             var result = _usuarioService.GetRoles();
@@ -37,6 +39,7 @@ namespace ClubNet.Api.Controllers
         }
 
         [HttpPost("UpdateUsuario")]
+        [Authorize(Roles = "1")]
         public IActionResult UpdateUsuario(UsuarioDTO usuario)
         {
             var result = _usuarioService.UpdateUsuario(usuario);
@@ -47,6 +50,7 @@ namespace ClubNet.Api.Controllers
         }
 
         [HttpPost("CreateUser")]
+        [Authorize(Roles = "1")]
         public IActionResult CreateUser(RegisterDTO usuario)
         {
             var result = _usuarioService.CreateUser(usuario);
@@ -60,6 +64,29 @@ namespace ClubNet.Api.Controllers
         public IActionResult RegisterToActivity(RegisterToActivityDTO registro)
         {
             var result = _usuarioService.RegisterToActivity(registro);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
+        [HttpGet("GetUsuarios")]
+        [Authorize(Roles = "1")]
+        public IActionResult GetUsuarios()
+        {
+            var result = _usuarioService.GetUsuarios();
+            if (result.Success)
+                return Ok(result.Data);
+            else
+                return BadRequest(result);
+        }
+
+        // CORRECCIÓN: Se añade [FromQuery] para forzar el binding del parámetro 'id'
+        [HttpDelete("DeleteUsuario")]
+        [Authorize(Roles = "1")]
+        public IActionResult DeleteUsuario([FromQuery] int id)
+        {
+            var result = _usuarioService.DeleteUsuario(id);
             if (result.Success)
                 return Ok(result);
             else
