@@ -1,13 +1,21 @@
-using ClubNet.Services;
+﻿using ClubNet.Services;
 using ClubNet.Services.Handlers;
 using ClubNet.Services.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.Reflection;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    // Obtiene el nombre del archivo XML de documentación generado (ej: ClubNet.Api.xml)
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+
+    // Incluye el archivo XML de documentación para que Swagger muestre los comentarios
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+});
 builder.Services.AddEndpointsApiExplorer();//revisar
 builder.Services.AddCors(options => options.AddDefaultPolicy(builder => {
     builder.AllowAnyOrigin();

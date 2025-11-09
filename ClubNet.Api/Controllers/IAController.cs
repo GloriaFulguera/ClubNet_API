@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System;
 using System.Linq;
+using Microsoft.AspNetCore.Http; // Necesario para StatusCodes
 
 namespace ClubNet.Api.Controllers
 {
@@ -24,9 +25,17 @@ namespace ClubNet.Api.Controllers
             _config = config;
         }
 
+        /// <summary>
+        /// Sugiere una actividad deportiva utilizando un modelo de Inteligencia Artificial (IA).
+        /// </summary>
+        /// <param name="datos">Datos del usuario (Edad, Intereses, Historial) para la sugerencia.</param>
+        /// <returns>Un objeto que contiene la sugerencia de actividad y el modelo de IA utilizado.</returns>
         [HttpPost("sugerirActividad")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         public async Task<IActionResult> SugerirActividad([FromBody] UsuarioDatos datos)
         {
+            // ... implementation as before ...
+            //
             var apiKey = _config["OpenRouter:ApiKey"];
 
             // Obtener lista de modelos gratuitos
