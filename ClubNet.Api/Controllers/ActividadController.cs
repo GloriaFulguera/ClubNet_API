@@ -61,7 +61,7 @@ namespace ClubNet.Api.Controllers
         [HttpPut("UpdateActividad")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        public IActionResult UpdateActividad(Actividad actividad)
+        public IActionResult UpdateActividad(UpdateActividadDTO actividad)
         {
             var result = _actividadService.UpdateActividad(actividad);
             if (result.Success)
