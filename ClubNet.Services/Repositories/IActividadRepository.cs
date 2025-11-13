@@ -6,7 +6,7 @@ namespace ClubNet.Services.Repositories
     public interface IActividadRepository
     {
         public ApiResponse CreateActividad(Actividad actividad);
-        public ApiResponse<List<Actividad>> GetActividades();
+        public ApiResponse<List<GetActividadDTO>> GetActividades();
         public ApiResponse UpdateActividad(Actividad actividad);
         public ApiResponse<Actividad> GetActividadById(int actividadId);
         public ApiResponse DeleteActividad(int id);

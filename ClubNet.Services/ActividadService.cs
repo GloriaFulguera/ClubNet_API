@@ -1,4 +1,5 @@
 ﻿using ClubNet.Models;
+using ClubNet.Models.DTO;
 using ClubNet.Services.Handlers;
 using ClubNet.Services.Repositories;
 using Newtonsoft.Json;
@@ -28,12 +29,15 @@ namespace ClubNet.Services
             return createResult;
         }
 
-        public ApiResponse<List<Actividad>> GetActividades()
+        public ApiResponse<List<GetActividadDTO>> GetActividades()
         {
-            ApiResponse<List<Actividad>> getResult = new ApiResponse<List<Actividad>>();
-            string query = "SELECT * FROM actividades ORDER BY actividad_id ASC;";
+            ApiResponse<List<GetActividadDTO>> getResult = new ApiResponse<List<GetActividadDTO>>();
+            string query = "SELECT a.*,p.nombre AS ent_nombre,p.apellido AS ent_apellido FROM actividades a " +
+                "INNER JOIN asignacion_entrenadores ae ON ae.actividad_id =a.actividad_id  " +
+                "LEFT JOIN personas p ON p.persona_id =ae.persona_id  " +
+                "ORDER BY a.actividad_id ASC;";
             string result = PostgresHandler.GetJson(query);
-            List<Actividad> actividades = JsonConvert.DeserializeObject<List<Actividad>>(result);
+            List<GetActividadDTO> actividades = JsonConvert.DeserializeObject<List<GetActividadDTO>>(result);
             getResult.Data = actividades;
 
             if (actividades == null)

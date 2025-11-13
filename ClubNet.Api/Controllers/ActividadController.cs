@@ -1,9 +1,10 @@
 ﻿using ClubNet.Models;
+using ClubNet.Models.DTO;
 using ClubNet.Services.Repositories;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Http;
 
 namespace ClubNet.Api.Controllers
 {
@@ -41,7 +42,7 @@ namespace ClubNet.Api.Controllers
         /// </summary>
         /// <returns>Un listado de actividades.</returns>
         [HttpGet("GetActividades")]
-        [ProducesResponseType(typeof(List<Actividad>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<GetActividadDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
         public IActionResult GetActividades()
         {
