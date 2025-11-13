@@ -1,5 +1,4 @@
-﻿
-using ClubNet.Models;
+﻿using ClubNet.Models;
 using ClubNet.Models.DTO;
 using ClubNet.Services.Handlers;
 using ClubNet.Services.Repositories;
@@ -59,9 +58,12 @@ namespace ClubNet.Services
         public ApiResponse UpdateUsuario(UsuarioDTO usuario)
         {
             ApiResponse result = new ApiResponse();
-            string query = "UPDATE personas SET nombre = @nombre, apellido = @apellido, dni = @dni, estado = @estado, rol_id = @rol_id " +
+
+            // 1. Actualizar campos en la tabla 'personas'
+            string queryPersona = "UPDATE personas SET nombre = @nombre, apellido = @apellido, dni = @dni, estado = @estado, rol_id = @rol_id " +
                 "WHERE persona_id = @persona_id;";
-            bool success = PostgresHandler.Exec(query,
+
+            bool successPersona = PostgresHandler.Exec(queryPersona,
                 ("nombre", usuario.Nombre),
                 ("apellido", usuario.Apellido),
                 ("dni", usuario.Dni),
@@ -70,9 +72,21 @@ namespace ClubNet.Services
                 ("persona_id", usuario.Persona_id)
             );
 
+            // 2. Actualizar el campo 'email' en la tabla 'usuarios'
+            string queryUser = "UPDATE usuarios u SET email = @email " +
+                               "FROM rel_usuarios_personas rup " +
+                               "WHERE u.user_id = rup.user_id AND rup.persona_id = @persona_id;";
+
+            bool successUser = PostgresHandler.Exec(queryUser,
+                ("email", usuario.Email),
+                ("persona_id", usuario.Persona_id)
+            );
+
+            bool success = successPersona && successUser;
+
             result.Success = success;
             if (!success)
-                result.Message = "Error al actualizar el usuario.";
+                result.Message = "Error al actualizar el usuario (Fallo al actualizar datos personales o email).";
 
             return result;
         }
@@ -127,6 +141,46 @@ namespace ClubNet.Services
             }
 
             return result;
+        }
+
+        public ApiResponse<List<UsuarioDTO>> GetUsuarios()
+        {
+            ApiResponse<List<UsuarioDTO>> getResult = new ApiResponse<List<UsuarioDTO>>();
+
+            string query = $"SELECT p.persona_id,p.nombre,p.apellido,p.dni,u.email,p.estado,p.rol_id FROM personas p " +
+                           $"INNER JOIN rel_usuarios_personas up on up.persona_id = p.persona_id " +
+                           $"LEFT JOIN usuarios u on u.user_id = up.user_id " +
+                           $"ORDER BY p.persona_id ASC;";
+
+            string result = PostgresHandler.GetJson(query);
+
+            List<UsuarioDTO> usuarios = JsonConvert.DeserializeObject<List<UsuarioDTO>>(result);
+            if (usuarios == null)
+            {
+                getResult.Success = false;
+                getResult.Message = "Ocurrió un problema al obtener los usuarios.";
+            }
+            else
+            {
+                getResult.Success = true;
+                getResult.Data = usuarios;
+            }
+            return getResult;
+        }
+
+        public ApiResponse DeleteUsuario(int personaId)
+        {
+            ApiResponse deleteResult = new ApiResponse();
+
+            // Baja lógica: establece el estado de la persona a FALSE
+            string query = "UPDATE personas SET estado = false WHERE persona_id = @id";
+            bool result = PostgresHandler.Exec(query, ("id", personaId));
+
+            deleteResult.Success = result;
+            if (!result)
+                deleteResult.Message = "Ocurrió un problema al dar de baja el usuario, contacte al administrador.";
+
+            return deleteResult;
         }
     }
 }
