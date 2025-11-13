@@ -3,8 +3,10 @@ using ClubNet.Models;
 using ClubNet.Models.DTO;
 using ClubNet.Services.Handlers;
 using ClubNet.Services.Repositories;
+using Dapper;
 using Microsoft.Win32;
 using Newtonsoft.Json;
+using System.Data;
 
 namespace ClubNet.Services
 {
@@ -95,17 +97,34 @@ namespace ClubNet.Services
             return result;
         }
 
-        public ApiResponse RegisterToActivity(RegisterToActivityDTO registro)
+        public ApiResponse<int> RegisterToActivity(RegisterToActivityDTO registro)
         {
-            ApiResponse result = new ApiResponse();
+            ApiResponse<int> result = new ApiResponse<int>();
 
-            string query = "CALL SP_ALTA_USUARIO_ACTIVIDAD(@p_dni,@p_actividadid)";
-            bool resultExec = PostgresHandler.Exec(query,
-                ("p_dni", registro.Dni),
-                ("p_actividadid", registro.Actividad_id)
-                );
-            result.Success = resultExec;
-            if (!resultExec) result.Message = "Ocurrio un problema durante la inscripción.";
+            string procedure = "SP_ALTA_INSCRIPCION";
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@p_dni", registro.Dni, DbType.Int32);
+            parameters.Add("@p_actividad_id", registro.Actividad_id, DbType.Int32);
+            parameters.Add(
+                "@p_inscripcion_id_out",
+                dbType: DbType.Int32,
+                direction: ParameterDirection.InputOutput
+            );
+
+            try
+            {
+                object nuevoId = PostgresHandler.ExecStoredProcedureWithOutput(procedure, parameters, "@p_inscripcion_id_out");
+
+                result.Success = true;
+                result.Data = Convert.ToInt32(nuevoId);
+                result.Message = "Inscripción creada con éxito.";
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = "Ocurrió un problema durante la inscripción: " + ex.Message;
+            }
 
             return result;
         }

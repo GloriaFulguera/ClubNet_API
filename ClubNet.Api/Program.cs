@@ -21,6 +21,7 @@ builder.Services.AddSingleton<ILoginRepository, LoginService>();
 builder.Services.AddSingleton<IUsuarioRepository, UsuarioService>();
 builder.Services.AddSingleton<IActividadRepository, ActividadService>();
 builder.Services.AddSingleton<IClasesRepository, ClaseService>();
+builder.Services.AddSingleton<ICobranzaRepository, CobranzaService>();
 
 // JWT setup
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
@@ -55,7 +56,7 @@ app.UseSwaggerUI(c =>
 app.MapControllers();
 
 app.UseCors();
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthentication(); // 1. Autenticar (leer y validar el JWT)
 app.UseAuthorization();  // 2. Autorizar (verificar si el usuario tiene permiso)
 app.Run();
