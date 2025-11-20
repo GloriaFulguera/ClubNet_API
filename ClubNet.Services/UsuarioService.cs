@@ -143,6 +143,34 @@ namespace ClubNet.Services
             return result;
         }
 
+        public ApiResponse RegisterToActivityEntrenador(RegisterToActivityEntrenadorDTO registro)
+        {
+            ApiResponse result = new ApiResponse();
+            try
+            {
+                string query = "INSERT INTO asignacion_entrenadores(persona_id,actividad_id) VALUES (@persona,@actividad);";
+
+                bool insertResult = PostgresHandler.Exec(query,
+                    ("persona", registro.Persona_id),
+                    ("actividad", registro.Actividad_id));
+
+
+                result.Success = insertResult;
+                result.Message = "Registro creado con éxito.";
+
+                if(!result.Success)
+                    result.Message = "No se pudo relacionar el entrenador con la actividad.";
+
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = "Ocurrió un problema durante la inscripción: " + ex.Message;
+            }
+
+            return result;
+        }
+
         public ApiResponse<List<UsuarioDTO>> GetUsuarios()
         {
             ApiResponse<List<UsuarioDTO>> getResult = new ApiResponse<List<UsuarioDTO>>();
@@ -182,5 +210,32 @@ namespace ClubNet.Services
 
             return deleteResult;
         }
+
+        public ApiResponse<List<UsuarioDTO>> GetUsuariosByRol(int rol)
+        {
+            ApiResponse<List<UsuarioDTO>> getResult = new ApiResponse<List<UsuarioDTO>>();
+
+            string query = $"SELECT p.persona_id,p.nombre,p.apellido,p.dni,u.email,p.estado,p.rol_id FROM personas p " +
+                           $"INNER JOIN rel_usuarios_personas up on up.persona_id = p.persona_id " +
+                           $"LEFT JOIN usuarios u on u.user_id = up.user_id " +
+                           $"WHERE p.rol_id=@rol " +
+                           $"ORDER BY p.persona_id ASC;";
+
+            string result = PostgresHandler.GetJson(query,("rol",rol));
+
+            List<UsuarioDTO> usuarios = JsonConvert.DeserializeObject<List<UsuarioDTO>>(result);
+            if (usuarios == null)
+            {
+                getResult.Success = false;
+                getResult.Message = "Ocurrió un problema al obtener los usuarios.";
+            }
+            else
+            {
+                getResult.Success = true;
+                getResult.Data = usuarios;
+            }
+            return getResult;
+        }
+
     }
 }

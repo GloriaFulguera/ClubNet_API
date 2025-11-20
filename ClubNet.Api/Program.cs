@@ -1,6 +1,7 @@
 ﻿using ClubNet.Services;
 using ClubNet.Services.Handlers;
 using ClubNet.Services.Repositories;
+using ClubNet.Services.Workers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
@@ -50,6 +51,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddHttpClient();
+builder.Services.AddHostedService<WebhookWorker>();
 
 var app = builder.Build();
 

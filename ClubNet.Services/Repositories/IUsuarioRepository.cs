@@ -12,5 +12,7 @@ namespace ClubNet.Services.Repositories
         public ApiResponse<int> RegisterToActivity(RegisterToActivityDTO registro);
         public ApiResponse<List<UsuarioDTO>> GetUsuarios();
         public ApiResponse DeleteUsuario(int personaId);
+        public ApiResponse RegisterToActivityEntrenador(RegisterToActivityEntrenadorDTO registro);
+        public ApiResponse<List<UsuarioDTO>> GetUsuariosByRol(int rol);
     }
 }

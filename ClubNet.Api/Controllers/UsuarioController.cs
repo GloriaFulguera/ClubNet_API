@@ -150,5 +150,31 @@ namespace ClubNet.Api.Controllers
             else
                 return BadRequest(result);
         }
+
+        [HttpGet("GetUsuariosByRol")]
+        public IActionResult GetUsuariosByRol([FromQuery] int? rol)
+        {
+
+             var    result = _usuarioService.GetUsuariosByRol(rol.Value);
+
+            
+            if (result.Success)
+                return Ok(result.Data);
+            else
+                return BadRequest(result);
+        }
+
+        [HttpPost("RegisterToActivityEntrenador")]
+        public IActionResult RegisterToActivityEntrenador(RegisterToActivityEntrenadorDTO registro)
+        {
+
+            var result = _usuarioService.RegisterToActivityEntrenador(registro);
+
+
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
     }
 }

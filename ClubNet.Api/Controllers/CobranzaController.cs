@@ -60,8 +60,9 @@ namespace ClubNet.Api.Controllers
         [ProducesResponseType(typeof(PaymentResponse), StatusCodes.Status200OK)]
         public IActionResult Success([FromQuery] PaymentResponse response)
         {
+            string url = "http://localhost:4200/pago/exito";
             Console.WriteLine(JsonConvert.SerializeObject(response));
-            return Ok(response);
+            return Redirect(url);
         }
 
         /// <summary>
