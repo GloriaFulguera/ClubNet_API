@@ -25,6 +25,15 @@ namespace ClubNet.Services
             ApiResponse<string> response = new ApiResponse<string>();
             try
             {
+                string queryCobro = "SELECT cobro_id " +
+                    "FROM Cobros " +
+                    "WHERE inscripcion_id = @id AND estado = 'PENDIENTE' AND monto=@monto" +
+                    "ORDER BY cobro_id ASC LIMIT 1";
+
+                string cobroIdReal = PostgresHandler.GetScalar(queryCobro, 
+                    ("id", solicitud.Inscripcion_id),
+                    ("monto",solicitud.Monto));
+
                 MercadoPagoConfig.AccessToken = _configuration["MercadoPago:AccessToken"];
                 // Crea el objeto de request de la preference
                 var request = new PreferenceRequest
@@ -53,7 +62,7 @@ namespace ClubNet.Services
                         ExcludedPaymentMethods = [],
                         ExcludedPaymentTypes = []
                     },
-                    ExternalReference = solicitud.Inscripcion_id.ToString(),
+                    ExternalReference = cobroIdReal,
                     ExpirationDateFrom = DateTime.Now,
                     ExpirationDateTo = DateTime.Now.AddMinutes(10),
                     Expires = true
@@ -83,7 +92,7 @@ namespace ClubNet.Services
                 string validacionQuery = "SELECT COUNT(*) FROM PagosPendientesVerificacion WHERE payment_id = @payment_id;";
                 string exists = PostgresHandler.GetScalar(validacionQuery, ("payment_id", payment_id));
 
-                if(exists == "0")
+                if (exists == "0")
                 {
                     string query = "INSERT INTO PagosPendientesVerificacion(payment_id) VALUES (@payment_id);";
 
@@ -138,6 +147,47 @@ namespace ClubNet.Services
                 response.Success = false;
                 response.Message = "Ocurrio un error obteniendo el detalle del pago.";
                 return response;
+            }
+        }
+
+        public async Task<PagoPendienteDTO> ObtenerSiguientePendiente()
+        {
+            string query = "SELECT id, payment_id, estado, intentos " +
+                "FROM pagospendientesverificacion " +
+                "WHERE estado = 'PENDIENTE' " +
+                "ORDER BY fechacreacion ASC LIMIT 1";
+
+            var result = PostgresHandler.GetJson(query);
+            var lista = JsonConvert.DeserializeObject<List<PagoPendienteDTO>>(result);
+
+            return lista?.FirstOrDefault();
+        }
+
+        public async Task ProcesarPagoPendienteAsync(PagoPendienteDTO pendiente)
+        {
+            try
+            {
+                var infoPago = await ObtenerDetallePago(pendiente.Payment_id);
+
+                if (infoPago == null) throw new Exception("No se pudo obtener info de MP");
+
+                if (infoPago.Data.Status == "approved")
+                {
+                    string refStr = infoPago.Data.ExternalReference;
+
+                    if (int.TryParse(refStr, out int cobroId))
+                    {
+                        string updateCobro = "UPDATE Cobros SET Estado = 'PAGADO', Saldo = 0 WHERE cobro_id = @id";
+                        PostgresHandler.Exec(updateCobro, ("id", cobroId));
+                    }
+                }
+                string updateCola = "UPDATE PagosPendientesVerificacion SET Estado = 'PROCESADO',fechaProcesado = CURRENT_TIMESTAMP WHERE Id = @id";
+                PostgresHandler.Exec(updateCola, ("id", pendiente.Id));
+            }
+            catch (Exception ex)
+            {
+                string updateError = "UPDATE PagosPendientesVerificacion SET Estado = 'ERROR', Intentos = Intentos + 1, MensajeError = @msg, fechaProcesado = CURRENT_TIMESTAMP WHERE Id = @id";
+                PostgresHandler.Exec(updateError, ("id", pendiente.Id), ("msg", ex.Message));
             }
         }
     }
