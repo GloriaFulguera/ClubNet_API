@@ -8,6 +8,7 @@ using MercadoPago.Resource.Preference;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
+using System.Diagnostics;
 
 namespace ClubNet.Services
 {
@@ -27,7 +28,7 @@ namespace ClubNet.Services
             {
                 string queryCobro = "SELECT cobro_id " +
                     "FROM Cobros " +
-                    "WHERE inscripcion_id = @id AND estado = 'PENDIENTE' AND monto=@monto" +
+                    "WHERE inscripcion_id = @id AND estado = 'PENDIENTE' AND monto=@monto " +
                     "ORDER BY cobro_id ASC LIMIT 1";
 
                 string cobroIdReal = PostgresHandler.GetScalar(queryCobro, 
@@ -170,7 +171,6 @@ namespace ClubNet.Services
                 var infoPago = await ObtenerDetallePago(pendiente.Payment_id);
 
                 if (infoPago == null) throw new Exception("No se pudo obtener info de MP");
-
                 if (infoPago.Data.Status == "approved")
                 {
                     string refStr = infoPago.Data.ExternalReference;
@@ -181,6 +181,7 @@ namespace ClubNet.Services
                         PostgresHandler.Exec(updateCobro, ("id", cobroId));
                     }
                 }
+
                 string updateCola = "UPDATE PagosPendientesVerificacion SET Estado = 'PROCESADO',fechaProcesado = CURRENT_TIMESTAMP WHERE Id = @id";
                 PostgresHandler.Exec(updateCola, ("id", pendiente.Id));
             }
