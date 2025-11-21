@@ -9,12 +9,16 @@ namespace ClubNet.Services
 {
     public class ActividadService : IActividadRepository
     {
-        public ApiResponse CreateActividad(Actividad actividad)
+        public ApiResponse CreateActividad(CreateActividadDTO actividad)
         {
             ApiResponse createResult = new ApiResponse();
-            string query = $"INSERT INTO actividades(nombre,descripcion,cupo,inicio,estado,cuota_valor,url_imagen) " +
-                $"VALUES (@nombre,@descripcion,@cupo,@inicio,@estado,@cuota_valor,@url_imagen)";
-            bool result = PostgresHandler.Exec(query,
+            try
+            {
+                string query = @"INSERT INTO actividades(nombre,descripcion,cupo,inicio,estado,cuota_valor,url_imagen) 
+                         VALUES (@nombre,@descripcion,@cupo,@inicio,@estado,@cuota_valor,@url_imagen) 
+                         RETURNING actividad_id;";
+
+                string idStr = PostgresHandler.GetScalar(query,
                 ("nombre", actividad.Nombre),
                 ("descripcion", actividad.Descripcion),
                 ("cupo", actividad.Cupo),
@@ -23,20 +27,65 @@ namespace ClubNet.Services
                 ("cuota_valor", actividad.Cuota_valor),
                 ("url_imagen", actividad.Url_imagen));
 
-            createResult.Success = result;
-            if (!result)
-                createResult.Message = "Ocurrio un problema al crear la actividad, contacte al administrador.";
+                if (!int.TryParse(idStr, out int newId))
+                    throw new Exception("No se pudo obtener el ID de la actividad creada.");
 
+                // 2. Asignar Entrenador si viene en el DTO
+                if (actividad.Entrenador_id != null && actividad.Entrenador_id > 0)
+                {
+                    string queryEnt = "INSERT INTO asignacion_entrenadores(persona_id, actividad_id) VALUES (@persona, @actividad);";
+                    PostgresHandler.Exec(queryEnt,
+                        ("persona", actividad.Entrenador_id),
+                        ("actividad", newId));
+                }
+
+                createResult.Success = true;
+                createResult.Message = "Actividad creada correctamente.";
+            }
+            catch (Exception ex)
+            {
+                createResult.Success = false;
+                createResult.Message = "Error: " + ex.Message;
+            }
             return createResult;
         }
+
+    //bool result = PostgresHandler.Exec(query,
+    //    ("nombre", actividad.Nombre),
+    //    ("descripcion", actividad.Descripcion),
+    //    ("cupo", actividad.Cupo),
+    //    ("inicio", actividad.Inicio),
+    //    ("estado", actividad.Estado),
+    //    ("cuota_valor", actividad.Cuota_valor),
+    //    ("url_imagen", actividad.Url_imagen));
+
+    //createResult.Success = result;
+    //        if (!result)
+    //            createResult.Message = "Ocurrio un problema al crear la actividad, contacte al administrador.";
+
+    //        return createResult;
+    //    }
 
         public ApiResponse<List<GetActividadDTO>> GetActividades()
         {
             ApiResponse<List<GetActividadDTO>> getResult = new ApiResponse<List<GetActividadDTO>>();
-            string query = "SELECT a.*,p.nombre AS ent_nombre,p.apellido AS ent_apellido FROM actividades a " +
-                "LEFT JOIN asignacion_entrenadores ae ON ae.actividad_id =a.actividad_id  " +
-                "LEFT JOIN personas p ON p.persona_id =ae.persona_id  " +
-                "ORDER BY a.actividad_id ASC;";
+            string query = @"
+                SELECT 
+                    a.actividad_id,
+                    a.nombre,
+                    a.descripcion,
+                    a.cupo,
+                    a.inicio,
+                    a.cuota_valor,
+                    a.estado,
+                    a.url_imagen,
+                    p.nombre AS ent_nombre,       /* Alias exacto para el DTO */
+                    p.apellido AS ent_apellido,   /* Alias exacto para el DTO */
+                    p.persona_id AS entrenador_id /* Alias exacto para el DTO */
+                FROM actividades a 
+                LEFT JOIN asignacion_entrenadores ae ON ae.actividad_id = a.actividad_id  
+                LEFT JOIN personas p ON p.persona_id = ae.persona_id  
+                ORDER BY a.actividad_id ASC;";
             string result = PostgresHandler.GetJson(query);
             List<GetActividadDTO> actividades = JsonConvert.DeserializeObject<List<GetActividadDTO>>(result);
             getResult.Data = actividades;

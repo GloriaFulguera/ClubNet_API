@@ -27,7 +27,7 @@ namespace ClubNet.Api.Controllers
         [HttpPost("CreateActividad")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        public IActionResult CreateActividad(Actividad actividad)
+        public IActionResult CreateActividad(CreateActividadDTO actividad)
         {
             var result = _actividadService.CreateActividad(actividad);
 
