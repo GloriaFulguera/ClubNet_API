@@ -2,6 +2,7 @@
 using ClubNet.Models.DTO;
 using ClubNet.Services.Handlers;
 using ClubNet.Services.Repositories;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 
@@ -69,9 +70,12 @@ namespace ClubNet.Services
                 ("url_imagen", actividad.Url_imagen),
                 ("id", actividad.Actividad_id));
 
-            bool entrenadorResult = false;
+            bool entrenadorResult = true;
 
-            if (actividad.Entrenador_id == null)
+            string queryEntrenador= "SELECT persona_id FROM asignacion_entrenadores WHERE actividad_id=@actividadId";
+            string entrenador = PostgresHandler.GetScalar(queryEntrenador, ("actividadId", actividad.Actividad_id));
+
+            if (string.IsNullOrEmpty(entrenador))
             {
                 string queryEnt = "INSERT INTO asignacion_entrenadores(persona_id,actividad_id) VALUES (@persona,@actividad);";
 
@@ -79,7 +83,7 @@ namespace ClubNet.Services
                     ("persona", actividad.Entrenador_id),
                     ("actividad", actividad.Actividad_id));
             }
-            else
+            else if(int.Parse(entrenador) != actividad.Entrenador_id && actividad.Entrenador_id != 0)
             {
                 string queryEnt = "UPDATE asignacion_entrenadores SET persona_id=@persona WHERE actividad_id=@actividad;";
                 entrenadorResult = PostgresHandler.Exec(queryEnt,
