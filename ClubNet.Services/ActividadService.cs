@@ -34,7 +34,7 @@ namespace ClubNet.Services
         {
             ApiResponse<List<GetActividadDTO>> getResult = new ApiResponse<List<GetActividadDTO>>();
             string query = "SELECT a.*,p.nombre AS ent_nombre,p.apellido AS ent_apellido FROM actividades a " +
-                "INNER JOIN asignacion_entrenadores ae ON ae.actividad_id =a.actividad_id  " +
+                "LEFT JOIN asignacion_entrenadores ae ON ae.actividad_id =a.actividad_id  " +
                 "LEFT JOIN personas p ON p.persona_id =ae.persona_id  " +
                 "ORDER BY a.actividad_id ASC;";
             string result = PostgresHandler.GetJson(query);
