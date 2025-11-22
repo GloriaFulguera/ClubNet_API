@@ -7,5 +7,7 @@ namespace ClubNet.Services.Repositories
     {
         public ApiResponse<string> Login(LoginDTO login);
         public ApiResponse Register(RegisterDTO register);
+        public ApiResponse RecuperarClave(string email);
+        public ApiResponse CambiarClave(string email, CambiarClaveDTO datos);
     }
 }

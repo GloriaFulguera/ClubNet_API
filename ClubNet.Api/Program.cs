@@ -2,12 +2,15 @@
 using ClubNet.Services.Handlers;
 using ClubNet.Services.Repositories;
 using ClubNet.Services.Workers;
+using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+Env.Load();
+builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen(options =>
 {
