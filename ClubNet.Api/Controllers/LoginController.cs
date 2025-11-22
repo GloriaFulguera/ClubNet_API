@@ -1,8 +1,10 @@
 ﻿using ClubNet.Models;
 using ClubNet.Models.DTO;
 using ClubNet.Services.Repositories;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http; // Necesario para StatusCodes
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ClubNet.Api.Controllers
 {
@@ -49,5 +51,34 @@ namespace ClubNet.Api.Controllers
             else
                 return Unauthorized(result);
         }
+
+        [HttpPost("RecuperarClave")]
+        public IActionResult RecuperarClave([FromBody] OlvidoClaveDTO request)
+        {
+            var result = _loginService.RecuperarClave(request.Email);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
+        [HttpPost("CambiarClave")]
+        [Authorize]
+        public IActionResult CambiarClave([FromBody] CambiarClaveDTO datos)
+        {
+            // Extraemos el email del Token JWT automáticamente
+            string email = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+
+            if (string.IsNullOrEmpty(email))
+                return Unauthorized(new { message = "Token inválido o sin email." });
+
+            var result = _loginService.CambiarClave(email, datos);
+
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
     }
 }

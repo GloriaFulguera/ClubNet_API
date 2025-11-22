@@ -4,10 +4,12 @@ using ClubNet.Services.Handlers;
 using ClubNet.Services.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
+using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
-using System.Data;
 
 namespace ClubNet.Services
 {
@@ -135,5 +137,166 @@ namespace ClubNet.Services
 
             return result;
         }
+
+        public ApiResponse RecuperarClave(string email)
+        {
+            var response = new ApiResponse();
+
+            // 1. Verificar si el usuario existe
+            string queryCheck = "SELECT COUNT(*) FROM usuarios WHERE email = @email";
+            string count = PostgresHandler.GetScalar(queryCheck, ("email", email));
+
+            if (count == "0")
+            {
+                // Por seguridad, a veces se dice "Si el correo existe, se envió", 
+                // pero para desarrollo diremos que no existe.
+                response.Success = false;
+                response.Message = "El correo no se encuentra registrado.";
+                return response;
+            }
+
+            // 2. Generar nueva contraseña temporal
+            string nuevaClave = GenerarClaveRandomd(8);
+            string nuevoHash = BCrypt.Net.BCrypt.HashPassword(nuevaClave);
+
+            // 3. Actualizar en Base de Datos
+            string queryUpdate = "UPDATE usuarios SET clave = @clave WHERE email = @email";
+            bool dbResult = PostgresHandler.Exec(queryUpdate, ("clave", nuevoHash), ("email", email));
+
+            if (!dbResult)
+            {
+                response.Success = false;
+                response.Message = "Error al actualizar la contraseña.";
+                return response;
+            }
+
+            // 4. Enviar Email
+            bool emailSent = SendRecoveryEmail(email, nuevaClave);
+
+            if (emailSent)
+            {
+                response.Success = true;
+                response.Message = "Se ha enviado una nueva contraseña a tu correo.";
+            }
+            else
+            {
+                response.Success = false;
+                // Nota: La contraseña ya se cambió en DB, esto podría ser un problema si el mail falla.
+                // Idealmente se debería hacer rollback, pero para este MVP está bien.
+                response.Message = "La contraseña se restableció, pero falló el envío del correo. Contacta al admin.";
+            }
+
+            return response;
+        }
+
+        private string GenerarClaveRandomd(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, length)
+              .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        private bool SendRecoveryEmail(string destinatario, string nuevaClave)
+        {
+            try
+            {
+                // 1. Leer configuración desde el .env (o appsettings)
+                string fromEmail = _config["Email:SenderAddress"];
+                string fromName = _config["Email:SenderName"];
+                string fromPassword = _config["Email:SenderPassword"];
+
+                // Validar que la configuración exista para evitar errores raros
+                if (string.IsNullOrEmpty(fromEmail) || string.IsNullOrEmpty(fromPassword))
+                {
+                    Console.WriteLine("Error: Faltan configuraciones de Email en el .env");
+                    return false;
+                }
+
+                // 2. Usar las variables
+                var fromAddress = new MailAddress(fromEmail, fromName);
+                var toAddress = new MailAddress(destinatario);
+                const string subject = "Recuperación de Contraseña - ClubNet";
+
+                // ... resto del cuerpo del correo ...
+                string body = $@"
+            <h1>Recuperación de Contraseña</h1>
+            <p>Hola,</p>
+            <p>Has solicitado recuperar tu contraseña. Tu nueva contraseña temporal es:</p>
+            <h2 style='color: #2563eb;'>{nuevaClave}</h2>
+            <p>Por favor, inicia sesión y cámbiala lo antes posible.</p>";
+
+                var smtp = new SmtpClient
+                {
+                    Host = "smtp.gmail.com",
+                    Port = 587,
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false,
+                    // Usar la variable here
+                    Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+                };
+
+                using (var message = new MailMessage(fromAddress, toAddress)
+                {
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = true
+                })
+                {
+                    smtp.Send(message);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error enviando mail: " + ex.Message);
+                return false;
+            }
+        }
+
+        // En ClubNet.Services/LoginService.cs
+
+        public ApiResponse CambiarClave(string email, CambiarClaveDTO datos)
+        {
+            var response = new ApiResponse();
+
+            // 1. Buscar la clave actual del usuario
+            string queryGet = "SELECT u.clave FROM usuarios u WHERE u.email = @email";
+            // Usamos GetDt o GetScalar para traer el hash
+            DataTable table = PostgresHandler.GetDt(queryGet, ("email", email));
+
+            if (table.Rows.Count == 0)
+            {
+                response.Success = false;
+                response.Message = "Usuario no encontrado.";
+                return response;
+            }
+
+            string hashActual = table.Rows[0]["clave"].ToString();
+
+            // 2. Verificar que la contraseña actual ingresada coincida con el hash
+            bool passwordEsValida = BCrypt.Net.BCrypt.Verify(datos.ClaveActual, hashActual);
+
+            if (!passwordEsValida)
+            {
+                response.Success = false;
+                response.Message = "La contraseña actual es incorrecta.";
+                return response;
+            }
+
+            // 3. Generar nuevo hash y actualizar
+            string nuevoHash = BCrypt.Net.BCrypt.HashPassword(datos.NuevaClave);
+            string queryUpdate = "UPDATE usuarios SET clave = @clave WHERE email = @email";
+
+            bool result = PostgresHandler.Exec(queryUpdate, ("clave", nuevoHash), ("email", email));
+
+            response.Success = result;
+            response.Message = result ? "Contraseña actualizada correctamente." : "Error al actualizar en base de datos.";
+
+            return response;
+        }
+
+
     }
 }
