@@ -255,15 +255,12 @@ namespace ClubNet.Services
             }
         }
 
-        // En ClubNet.Services/LoginService.cs
-
         public ApiResponse CambiarClave(string email, CambiarClaveDTO datos)
         {
             var response = new ApiResponse();
 
             // 1. Buscar la clave actual del usuario
             string queryGet = "SELECT u.clave FROM usuarios u WHERE u.email = @email";
-            // Usamos GetDt o GetScalar para traer el hash
             DataTable table = PostgresHandler.GetDt(queryGet, ("email", email));
 
             if (table.Rows.Count == 0)
