@@ -128,6 +128,12 @@ namespace ClubNet.Services
 
             try
             {
+                if(!ValidarInscripcion(registro, out string mensajeValidacion))
+                {
+                    result.Success = false;
+                    result.Message = mensajeValidacion;
+                    return result;
+                }
                 object nuevoId = PostgresHandler.ExecStoredProcedureWithOutput(procedure, parameters, "@p_inscripcion_id_out");
 
                 result.Success = true;
@@ -141,6 +147,33 @@ namespace ClubNet.Services
             }
 
             return result;
+        }
+
+        private bool ValidarInscripcion(RegisterToActivityDTO registro, out string mensaje)
+        {
+            string queryPersona = "SELECT COUNT(*) FROM personas WHERE dni = @dni AND estado = true;";
+            string resultPersona = PostgresHandler.GetScalar(queryPersona, ("dni", registro.Dni));
+            if (resultPersona == "0")
+            {
+                mensaje = "La persona no está activa o no existe.";
+                return false;
+            }
+
+            string queryInscripcion = "SELECT COUNT(*) FROM inscripciones i " +
+                "LEFT JOIN personas p ON p.dni = @dni " +
+                "WHERE p.dni = @dni AND i.actividad_id= @actividadId;";
+            string resultActividad = PostgresHandler.GetScalar(queryInscripcion, 
+                ("dni", registro.Dni),
+                ("actividadId",registro.Actividad_id));
+
+            if(resultActividad != "0")
+            {
+                mensaje = "Ya existe una inscripción para la persona indicada";
+                return false;
+            }
+
+            mensaje = "OK";
+            return true;
         }
 
         public ApiResponse RegisterToActivityEntrenador(RegisterToActivityEntrenadorDTO registro)

@@ -50,21 +50,6 @@ namespace ClubNet.Services
             return createResult;
         }
 
-    //bool result = PostgresHandler.Exec(query,
-    //    ("nombre", actividad.Nombre),
-    //    ("descripcion", actividad.Descripcion),
-    //    ("cupo", actividad.Cupo),
-    //    ("inicio", actividad.Inicio),
-    //    ("estado", actividad.Estado),
-    //    ("cuota_valor", actividad.Cuota_valor),
-    //    ("url_imagen", actividad.Url_imagen));
-
-    //createResult.Success = result;
-    //        if (!result)
-    //            createResult.Message = "Ocurrio un problema al crear la actividad, contacte al administrador.";
-
-    //        return createResult;
-    //    }
 
         public ApiResponse<List<GetActividadDTO>> GetActividades()
         {
