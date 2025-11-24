@@ -98,7 +98,7 @@ namespace ClubNet.Api.Controllers
         {
             var result = _cobranzaService.GetActividades(actividad_id, persona_id);
             if (result.Success)
-                return Ok(result.Data);
+                return Ok(result);
             else
                 return BadRequest(result);
         }

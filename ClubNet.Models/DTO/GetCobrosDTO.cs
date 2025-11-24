@@ -10,6 +10,7 @@ namespace ClubNet.Models.DTO
     {
         public int Cobro_id { get; set; }
         public int Persona_id { get; set; }
+        public string Socio { get; set; }
         public int Periodo { get; set; }
         public decimal Monto { get; set; }
         public string Estado { get; set; }

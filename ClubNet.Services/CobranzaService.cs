@@ -198,10 +198,11 @@ namespace ClubNet.Services
             ApiResponse<List<GetCobrosDTO>> response = new ApiResponse<List<GetCobrosDTO>>();
             try
             {
-                string query = "SELECT c.cobro_id,i.persona_id,c.periodo,c.monto,c.estado,i.actividad_id,a.nombre,i.dia_vencimiento,a.estado AS activo " +
+                string query = "SELECT c.cobro_id,i.persona_id,concat(p.nombre,' ',p.apellido) AS socio,c.periodo,c.monto,c.estado,i.actividad_id,a.nombre,i.dia_vencimiento,a.estado AS activo,c.periodo " +
                     "FROM cobros c " +
                     "LEFT JOIN inscripciones i ON i.inscripcion_id = c.inscripcion_id " +
-                    "LEFT JOIN actividades a ON a.actividad_id = i.actividad_id ";
+                    "LEFT JOIN actividades a ON a.actividad_id = i.actividad_id " +
+                    "LEFT JOIN personas p ON p.persona_id = i.persona_id ";
 
                 if(actividad_id.HasValue)
                 {
