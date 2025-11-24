@@ -103,5 +103,20 @@ namespace ClubNet.Api.Controllers
             else
                 return BadRequest(result);
         }
+
+        /// <summary>
+        /// Obtiene todas las inscripciones de un usuario por su email.
+        /// </summary>
+        /// <param name="email">El email de usuario.</param>
+        /// <returns>Los datos de las actividades a las que esta inscripto.</returns>
+        [HttpGet("GetInscripciones/{email}")]
+        public IActionResult GetInscripcionesUser(string email)
+        {
+            var result= _actividadService.GetInscripciones(email);
+            if (result.Success)
+                return Ok(result.Data);
+            else
+                return BadRequest(result);
+        }
     }
 }

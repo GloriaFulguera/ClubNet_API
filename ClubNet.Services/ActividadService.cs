@@ -191,5 +191,30 @@ namespace ClubNet.Services
             return deleteResult;
         }
 
+        public ApiResponse<List<GetInscripcionesDTO>> GetInscripciones(string email)
+        {
+            ApiResponse<List<GetInscripcionesDTO>> result = new ApiResponse<List<GetInscripcionesDTO>>();
+            try
+            {
+                string query = "SELECT p.*,a.actividad_id,a.nombre AS actividad_nombre,a.estado AS actividad_estado,a.cuota_valor,a.horario,i.fecha_inscripcion " +
+                    "FROM usuarios u " +
+                    "LEFT JOIN rel_usuarios_personas r ON r.user_id = u.user_id " +
+                    "LEFT JOIN personas p ON p.persona_id =r.persona_id " +
+                    "LEFT JOIN inscripciones i ON i.persona_id = p.persona_id " +
+                    "LEFT JOIN actividades a ON a.actividad_id =i.actividad_id " +
+                    "WHERE u.email =@mail;";
+
+                var queryResult = PostgresHandler.GetJson(query, ("mail", email));
+                var inscripciones = JsonConvert.DeserializeObject<List<GetInscripcionesDTO>>(queryResult);
+                result.Data = inscripciones;
+                result.Success = true;
+            }
+            catch(Exception ex)
+            {
+                result.Success = false;
+                result.Message = "Error: " + ex.Message;
+            }
+            return result;
+        }
     }
 }
