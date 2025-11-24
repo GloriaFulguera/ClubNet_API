@@ -11,5 +11,6 @@ namespace ClubNet.Services.Repositories
         public Task<ApiResponse<ObtenerDetallePagoDTO>> ObtenerDetallePago(string payment_id);
         public Task<PagoPendienteDTO> ObtenerSiguientePendiente();
         public Task ProcesarPagoPendienteAsync(PagoPendienteDTO pendiente);
+        public ApiResponse<List<GetCobrosDTO>> GetActividades(int? actividad_id, int? persona_id);
     }
 }
