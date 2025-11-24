@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace ClubNet.Services
 {
@@ -190,6 +191,40 @@ namespace ClubNet.Services
                 string updateError = "UPDATE PagosPendientesVerificacion SET Estado = 'ERROR', Intentos = Intentos + 1, MensajeError = @msg, fechaProcesado = CURRENT_TIMESTAMP WHERE Id = @id";
                 PostgresHandler.Exec(updateError, ("id", pendiente.Id), ("msg", ex.Message));
             }
+        }
+
+        public ApiResponse<List<GetCobrosDTO>> GetActividades(int? actividad_id, int? persona_id)
+        {
+            ApiResponse<List<GetCobrosDTO>> response = new ApiResponse<List<GetCobrosDTO>>();
+            try
+            {
+                string query = "SELECT c.cobro_id,i.persona_id,c.periodo,c.monto,c.estado,i.actividad_id,a.nombre,i.dia_vencimiento,a.estado AS activo " +
+                    "FROM cobros c " +
+                    "LEFT JOIN inscripciones i ON i.inscripcion_id = c.inscripcion_id " +
+                    "LEFT JOIN actividades a ON a.actividad_id = i.actividad_id ";
+
+                if(actividad_id.HasValue)
+                {
+                    query += "WHERE i.actividad_id = @actividad_id ";
+                }
+                else if(persona_id.HasValue)
+                {
+                    query += "WHERE i.persona_id = @persona_id ";
+                }
+
+                string result = PostgresHandler.GetJson(query, 
+                    ("actividad_id", actividad_id.HasValue ? actividad_id.Value : 0),
+                    ("persona_id", persona_id.HasValue ? persona_id.Value : 0));
+                var lista = JsonConvert.DeserializeObject<List<GetCobrosDTO>>(result);
+
+                response.Success = true;
+                response.Data = lista;
+            }
+            catch(Exception ex) {
+                response.Success = false;
+                response.Message = "Ocurrio un error obteniendo los cobros. " + ex.Message;
+            }
+            return response;
         }
     }
 }

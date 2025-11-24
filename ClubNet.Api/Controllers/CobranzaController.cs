@@ -88,5 +88,19 @@ namespace ClubNet.Api.Controllers
             Console.WriteLine(JsonConvert.SerializeObject(response));
             return Ok(response);
         }
+
+        /// <summary>
+        /// Endpoint para obtener el estado de cobros de un usuario o actividad.
+        /// </summary>
+        /// <returns>La respuesta del pago.</returns>
+        [HttpGet("GetCobros")]
+        public IActionResult GetCobros(int? actividad_id, int? persona_id)
+        {
+            var result = _cobranzaService.GetActividades(actividad_id, persona_id);
+            if (result.Success)
+                return Ok(result.Data);
+            else
+                return BadRequest(result);
+        }
     }
 }
