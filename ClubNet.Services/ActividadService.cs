@@ -158,22 +158,24 @@ namespace ClubNet.Services
 
         public ApiResponse DeleteActividad(int id)
         {
-            //TO DO: Corregir, vamos a hacer baja lógica en vez de eliminar registros.
             ApiResponse deleteResult = new ApiResponse();
 
-            // 1. Eliminar clases asociadas a la actividad.
-            PostgresHandler.Exec("DELETE FROM clases WHERE actividad_id=@id", ("id", id));
+            // Realizamos una BAJA LÓGICA (Update estado = false)
+            // Esto evita errores de integridad referencial (Foreign Keys) con pagos, entrenadores, etc.
+            string query = "UPDATE actividades SET estado = false WHERE actividad_id = @id";
 
-            // 2. Eliminar inscripciones de usuarios a esta actividad.
-            PostgresHandler.Exec("DELETE FROM rel_usuarios_actividades WHERE actividad_id=@id", ("id", id));
-
-            // 3. Eliminar la actividad principal.
-            string query = "DELETE FROM actividades WHERE actividad_id=@id";
             bool result = PostgresHandler.Exec(query, ("id", id));
 
             deleteResult.Success = result;
-            if (!result)
-                deleteResult.Message = "Ocurrio un problema al eliminar la actividad, contacte al administrador.";
+
+            if (result)
+            {
+                deleteResult.Message = "La actividad se ha dado de baja correctamente.";
+            }
+            else
+            {
+                deleteResult.Message = "Ocurrió un problema al dar de baja la actividad. Verifique que el ID exista.";
+            }
 
             return deleteResult;
         }
