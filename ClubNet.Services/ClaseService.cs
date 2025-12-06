@@ -12,12 +12,14 @@ namespace ClubNet.Services
         {
             ApiResponse response = new ApiResponse();
 
-            string query = $"INSERT INTO clases(actividad_id,titulo,detalle) " +
+            string query = $"INSERT INTO clases(actividad_id,actividad,titulo,detalle,intensidad) " +
                 $"VALUES (@actividad_id,@titulo,@detalle)";
             bool result = PostgresHandler.Exec(query,
                 ("actividad_id", clase.Actividad_id),
+                ("actividad", clase.Actividad),
                 ("titulo", clase.Titulo),
-                ("detalle", clase.Detalle));
+                ("detalle", clase.Detalle),
+                ("intensidad", clase.Intensidad));
 
             response.Success = result;
             if (!result)
@@ -29,9 +31,10 @@ namespace ClubNet.Services
         public ApiResponse UpdateClase(UpdateClaseDTO clase)
         {
             ApiResponse response = new ApiResponse();
-            string query = $"UPDATE clases SET titulo=@titulo, detalle=@detalle " +
+            string query = $"UPDATE clases SET actividad=@actividad, titulo=@titulo, detalle=@detalle " +
                 $"WHERE clase_id=@clase_id";
             bool result = PostgresHandler.Exec(query,
+                ("actividad", clase.Actividad),
                 ("titulo", clase.Titulo),
                 ("detalle", clase.Detalle),
                 ("clase_id", clase.Clase_id));
