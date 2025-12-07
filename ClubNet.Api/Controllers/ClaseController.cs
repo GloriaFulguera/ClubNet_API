@@ -21,8 +21,6 @@ namespace ClubNet.Api.Controllers
         /// <summary>
         /// Crea una nueva clase asociada a una actividad.
         /// </summary>
-        /// <param name="clase">Los datos de la clase a crear (Actividad_id, Titulo, Detalle).</param>
-        /// <returns>Un estado de la operación.</returns>
         [HttpPost("CreateClase")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
@@ -38,8 +36,6 @@ namespace ClubNet.Api.Controllers
         /// <summary>
         /// Actualiza los datos de una clase existente.
         /// </summary>
-        /// <param name="clase">Los datos actualizados de la clase (Clase_id, Titulo, Detalle).</param>
-        /// <returns>Un estado de la operación.</returns>
         [HttpPut("UpdateClase")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
@@ -55,8 +51,6 @@ namespace ClubNet.Api.Controllers
         /// <summary>
         /// Obtiene un listado de clases para una actividad específica.
         /// </summary>
-        /// <param name="actividadId">El ID de la actividad.</param>
-        /// <returns>Un listado de clases.</returns>
         [HttpGet("GetClases")]
         [ProducesResponseType(typeof(List<ClaseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
@@ -72,14 +66,15 @@ namespace ClubNet.Api.Controllers
         /// <summary>
         /// Elimina una clase por su ID.
         /// </summary>
-        /// <param name="claseId">El ID de la clase a eliminar.</param>
+        /// <param name="id">El ID de la clase a eliminar.</param>
         /// <returns>Un estado de la operación.</returns>
         [HttpDelete("DeleteClase")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        public IActionResult DeleteClase(int claseId)
+        // CAMBIO IMPORTANTE: Renombrado 'claseId' a 'id' para coincidir con el query string del frontend (?id=...)
+        public IActionResult DeleteClase(int id)
         {
-            var result = _claseService.DeleteClase(claseId);
+            var result = _claseService.DeleteClase(id);
             if (result.Success)
                 return Ok(result);
             else

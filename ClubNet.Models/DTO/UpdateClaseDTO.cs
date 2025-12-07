@@ -13,6 +13,6 @@ namespace ClubNet.Models.DTO
         public string Titulo { get; set; }
         public string Detalle { get; set; }
         public string Intensidad { get; set; }
-        public string Url_multimedia { get; set; }
+        public string? Url_multimedia { get; set; }
     }
 }
