@@ -59,10 +59,9 @@ builder.Services.AddHostedService<WebhookWorker>();
 var app = builder.Build();
 
 app.UseSwagger();
-app.UseSwaggerUI();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Stock.Backend");
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ClubNet.API");
     c.RoutePrefix = string.Empty;
 });
 
