@@ -12,8 +12,10 @@ namespace ClubNet.Services
         {
             ApiResponse response = new ApiResponse();
 
-            string query = $"INSERT INTO clases(actividad_id,actividad,titulo,detalle,intensidad) " +
-                $"VALUES (@actividad_id,@titulo,@detalle)";
+            // CORRECCIÓN: Se agregaron @actividad y @intensidad al VALUES
+            string query = $"INSERT INTO clases(actividad_id, actividad, titulo, detalle, intensidad) " +
+                           $"VALUES (@actividad_id, @actividad, @titulo, @detalle, @intensidad)";
+
             bool result = PostgresHandler.Exec(query,
                 ("actividad_id", clase.Actividad_id),
                 ("actividad", clase.Actividad),
