@@ -1,0 +1,274 @@
+﻿using ClubNet.Models;
+using ClubNet.Models.DTO;
+using ClubNet.Services.Handlers;
+using ClubNet.Services.Repositories;
+using Dapper;
+using Microsoft.Win32;
+using Newtonsoft.Json;
+using System.Data;
+
+namespace ClubNet.Services
+{
+    public class UsuarioService : IUsuarioRepository
+    {
+        public ApiResponse<UsuarioDTO> GetUsuarioByEmail(string email)
+        {
+            ApiResponse<UsuarioDTO> getResult = new ApiResponse<UsuarioDTO>();
+            string query = $"SELECT p.persona_id,p.nombre,p.apellido,p.dni,u.email,p.estado,p.rol_id FROM personas p " +
+                $"INNER JOIN rel_usuarios_personas up on up.persona_id = p.persona_id " +
+                $"LEFT JOIN usuarios u on u.user_id = up.user_id " +
+                $"WHERE u.email = @email AND p.estado = true;";
+
+            string result = PostgresHandler.GetJson(query, ("email", email));
+
+            List<UsuarioDTO> usuario = JsonConvert.DeserializeObject<List<UsuarioDTO>>(result);
+            if (usuario == null || usuario.Count == 0)
+            {
+                getResult.Success = false;
+                getResult.Message = "Usuario no encontrado.";
+            }
+            else
+            {
+                getResult.Success = true;
+                getResult.Data = usuario.FirstOrDefault();
+            }
+            return getResult;
+        }
+
+        public ApiResponse<List<Rol>> GetRoles()
+        {
+            ApiResponse<List<Rol>> getResult = new ApiResponse<List<Rol>>();
+            string query = "SELECT * FROM roles ORDER BY rol_id ASC;";
+            string result = PostgresHandler.GetJson(query);
+            List<Rol> roles = JsonConvert.DeserializeObject<List<Rol>>(result);
+
+            if (roles == null)
+            {
+                getResult.Success = false;
+                getResult.Message = "Ocurrió un problema al obtener los roles.";
+            }
+            else
+            {
+                getResult.Success = true;
+                getResult.Data = roles;
+            }
+            return getResult;
+        }
+
+        public ApiResponse UpdateUsuario(UsuarioDTO usuario)
+        {
+            ApiResponse result = new ApiResponse();
+
+            // 1. Actualizar campos en la tabla 'personas'
+            string queryPersona = "UPDATE personas SET nombre = @nombre, apellido = @apellido, dni = @dni, estado = @estado, rol_id = @rol_id " +
+                "WHERE persona_id = @persona_id;";
+
+            bool successPersona = PostgresHandler.Exec(queryPersona,
+                ("nombre", usuario.Nombre),
+                ("apellido", usuario.Apellido),
+                ("dni", usuario.Dni),
+                ("estado", usuario.Estado),
+                ("rol_id", usuario.Rol_id),
+                ("persona_id", usuario.Persona_id)
+            );
+
+            // 2. Actualizar el campo 'email' en la tabla 'usuarios'
+            string queryUser = "UPDATE usuarios u SET email = @email " +
+                               "FROM rel_usuarios_personas rup " +
+                               "WHERE u.user_id = rup.user_id AND rup.persona_id = @persona_id;";
+
+            bool successUser = PostgresHandler.Exec(queryUser,
+                ("email", usuario.Email),
+                ("persona_id", usuario.Persona_id)
+            );
+
+            bool success = successPersona && successUser;
+
+            result.Success = success;
+            if (!success)
+                result.Message = "Error al actualizar el usuario (Fallo al actualizar datos personales o email).";
+
+            return result;
+        }
+
+        public ApiResponse CreateUser(RegisterDTO usuario)
+        {
+            ApiResponse result = new ApiResponse();
+            string query = "CALL public.SP_ALTA_USUARIO(@p_email::varchar,@p_clave::varchar,@p_nombre::varchar,@p_apellido::varchar,@p_dni,@p_rol)";
+            bool resultExec = PostgresHandler.Exec(query,
+                ("p_email", usuario.Email),
+                ("p_clave", BCrypt.Net.BCrypt.HashPassword(usuario.Clave)),
+                ("p_nombre", usuario.Nombre),
+                ("p_apellido", usuario.Apellido),
+                ("p_dni", usuario.Dni),
+                ("p_rol", usuario.Rol)
+            );
+
+            result.Success = resultExec;
+            if (!resultExec)
+                result.Message = "Ocurrio un problema al registrar el usuario, contacte al administrador.";
+
+            return result;
+        }
+
+        public ApiResponse<int> RegisterToActivity(RegisterToActivityDTO registro)
+        {
+            ApiResponse<int> result = new ApiResponse<int>();
+
+            string procedure = "SP_ALTA_INSCRIPCION";
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@p_dni", registro.Dni, DbType.Int32);
+            parameters.Add("@p_actividad_id", registro.Actividad_id, DbType.Int32);
+            parameters.Add(
+                "@p_inscripcion_id_out",
+                dbType: DbType.Int32,
+                direction: ParameterDirection.InputOutput
+            );
+
+            try
+            {
+                if(!ValidarInscripcion(registro, out string mensajeValidacion))
+                {
+                    result.Success = false;
+                    result.Message = mensajeValidacion;
+                    return result;
+                }
+                object nuevoId = PostgresHandler.ExecStoredProcedureWithOutput(procedure, parameters, "@p_inscripcion_id_out");
+
+                result.Success = true;
+                result.Data = Convert.ToInt32(nuevoId);
+                result.Message = "Inscripción creada con éxito.";
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = "Ocurrió un problema durante la inscripción: " + ex.Message;
+            }
+
+            return result;
+        }
+
+        private bool ValidarInscripcion(RegisterToActivityDTO registro, out string mensaje)
+        {
+            string queryPersona = "SELECT COUNT(*) FROM personas WHERE dni = @dni AND estado = true;";
+            string resultPersona = PostgresHandler.GetScalar(queryPersona, ("dni", registro.Dni));
+            if (resultPersona == "0")
+            {
+                mensaje = "La persona no está activa o no existe.";
+                return false;
+            }
+
+            string queryInscripcion = "SELECT COUNT(*) FROM inscripciones i " +
+                "LEFT JOIN personas p ON p.dni = @dni " +
+                "WHERE p.dni = @dni AND i.actividad_id= @actividadId;";
+            string resultActividad = PostgresHandler.GetScalar(queryInscripcion, 
+                ("dni", registro.Dni),
+                ("actividadId",registro.Actividad_id));
+
+            if(resultActividad != "0")
+            {
+                mensaje = "Ya existe una inscripción para la persona indicada";
+                return false;
+            }
+
+            mensaje = "OK";
+            return true;
+        }
+
+        public ApiResponse RegisterToActivityEntrenador(RegisterToActivityEntrenadorDTO registro)
+        {
+            ApiResponse result = new ApiResponse();
+            try
+            {
+                string query = "INSERT INTO asignacion_entrenadores(persona_id,actividad_id) VALUES (@persona,@actividad);";
+
+                bool insertResult = PostgresHandler.Exec(query,
+                    ("persona", registro.Persona_id),
+                    ("actividad", registro.Actividad_id));
+
+
+                result.Success = insertResult;
+                result.Message = "Registro creado con éxito.";
+
+                if(!result.Success)
+                    result.Message = "No se pudo relacionar el entrenador con la actividad.";
+
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = "Ocurrió un problema durante la inscripción: " + ex.Message;
+            }
+
+            return result;
+        }
+
+        public ApiResponse<List<UsuarioDTO>> GetUsuarios()
+        {
+            ApiResponse<List<UsuarioDTO>> getResult = new ApiResponse<List<UsuarioDTO>>();
+
+            string query = $"SELECT p.persona_id,p.nombre,p.apellido,p.dni,u.email,p.estado,p.rol_id FROM personas p " +
+                           $"INNER JOIN rel_usuarios_personas up on up.persona_id = p.persona_id " +
+                           $"LEFT JOIN usuarios u on u.user_id = up.user_id " +
+                           $"ORDER BY p.persona_id ASC;";
+
+            string result = PostgresHandler.GetJson(query);
+
+            List<UsuarioDTO> usuarios = JsonConvert.DeserializeObject<List<UsuarioDTO>>(result);
+            if (usuarios == null)
+            {
+                getResult.Success = false;
+                getResult.Message = "Ocurrió un problema al obtener los usuarios.";
+            }
+            else
+            {
+                getResult.Success = true;
+                getResult.Data = usuarios;
+            }
+            return getResult;
+        }
+
+        public ApiResponse DeleteUsuario(int personaId)
+        {
+            ApiResponse deleteResult = new ApiResponse();
+
+            // Baja lógica: establece el estado de la persona a FALSE
+            string query = "UPDATE personas SET estado = false WHERE persona_id = @id";
+            bool result = PostgresHandler.Exec(query, ("id", personaId));
+
+            deleteResult.Success = result;
+            if (!result)
+                deleteResult.Message = "Ocurrió un problema al dar de baja el usuario, contacte al administrador.";
+
+            return deleteResult;
+        }
+
+        public ApiResponse<List<UsuarioDTO>> GetUsuariosByRol(int rol)
+        {
+            ApiResponse<List<UsuarioDTO>> getResult = new ApiResponse<List<UsuarioDTO>>();
+
+            string query = $"SELECT p.persona_id,p.nombre,p.apellido,p.dni,u.email,p.estado,p.rol_id FROM personas p " +
+                           $"INNER JOIN rel_usuarios_personas up on up.persona_id = p.persona_id " +
+                           $"LEFT JOIN usuarios u on u.user_id = up.user_id " +
+                           $"WHERE p.rol_id=@rol " +
+                           $"ORDER BY p.persona_id ASC;";
+
+            string result = PostgresHandler.GetJson(query,("rol",rol));
+
+            List<UsuarioDTO> usuarios = JsonConvert.DeserializeObject<List<UsuarioDTO>>(result);
+            if (usuarios == null)
+            {
+                getResult.Success = false;
+                getResult.Message = "Ocurrió un problema al obtener los usuarios.";
+            }
+            else
+            {
+                getResult.Success = true;
+                getResult.Data = usuarios;
+            }
+            return getResult;
+        }
+
+    }
+}
