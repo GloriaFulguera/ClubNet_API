@@ -2,14 +2,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ClubNet.Services.Workers
 {
-    public class WebhookWorker:BackgroundService
+    public class WebhookWorker : BackgroundService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
 
@@ -23,31 +21,39 @@ namespace ClubNet.Services.Workers
             while (!stoppingToken.IsCancellationRequested)
             {
                 bool proceso = false;
+
                 try
                 {
-                    using (var scope = _serviceScopeFactory.CreateScope())
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var cobranzaService = scope.ServiceProvider.GetRequiredService<ICobranzaRepository>();
+
+                    var pendiente = await cobranzaService.ObtenerSiguientePendiente();
+
+                    if (pendiente != null)
                     {
-                        var cobranzaService = scope.ServiceProvider.GetRequiredService<ICobranzaRepository>();
-
-                        var pendiente = await cobranzaService.ObtenerSiguientePendiente();
-
-                        if(pendiente!= null)
-                        {
-                            await cobranzaService.ProcesarPagoPendienteAsync(pendiente);
-                            proceso = true;
-                        }
+                        await cobranzaService.ProcesarPagoPendienteAsync(pendiente);
+                        proceso = true;
                     }
-                    await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
                 }
-                catch(Exception ex)
+                catch (TaskCanceledException)
                 {
-                    Console.WriteLine($"Error en WebhookWorker: {ex.Message}");
+                    break;
+                }
+                catch
+                {
                     proceso = false;
                 }
-                if (proceso)
-                    await Task.Delay(1000, stoppingToken);
-                else                
-                    await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+
+                var delay = proceso ? TimeSpan.FromSeconds(1) : TimeSpan.FromSeconds(30);
+
+                try
+                {
+                    await Task.Delay(delay, stoppingToken);
+                }
+                catch
+                {
+                    break; // Cancela el worker de manera limpia
+                }
             }
         }
     }
