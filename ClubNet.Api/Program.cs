@@ -54,7 +54,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddHttpClient();
-builder.Services.AddHostedService<WebhookWorker>();
+//builder.Services.AddHostedService<WebhookWorker>();
 
 var app = builder.Build();
 
