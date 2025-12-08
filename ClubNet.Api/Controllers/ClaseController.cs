@@ -80,5 +80,15 @@ namespace ClubNet.Api.Controllers
             else
                 return BadRequest(result);
         }
+
+        [HttpPost("UploadVideo")]
+        public async Task<IActionResult> UploadVideo(IFormFile file)
+        {
+            using var stream = file.OpenReadStream();
+            var url = await _claseService.UploadVideo(stream, file.FileName);
+
+            return Ok(url);
+        }
+
     }
 }
