@@ -12,5 +12,8 @@ namespace ClubNet.Services.Repositories
         public ApiResponse DeleteActividad(int id);
         public ApiResponse DeleteActividadEntrenador(int actividadId);
         public ApiResponse<List<GetInscripcionesDTO>> GetInscripciones(string email);
+        public ApiResponse CrearComunicado(CreateComunicadoDTO dto);
+        public ApiResponse<List<NotificacionDTO>> GetNotificacionesUsuario(string email);
+        public ApiResponse MarcarComoLeido(int comunicadoId, string email);
     }
 }
