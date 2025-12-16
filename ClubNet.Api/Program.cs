@@ -34,6 +34,7 @@ builder.Services.AddSingleton<IUsuarioRepository, UsuarioService>();
 builder.Services.AddSingleton<IActividadRepository, ActividadService>();
 builder.Services.AddSingleton<IClasesRepository, ClaseService>();
 builder.Services.AddSingleton<ICobranzaRepository, CobranzaService>();
+builder.Services.AddSingleton<IReporteService, ReporteService>();
 
 // JWT setup
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
