@@ -50,27 +50,47 @@ namespace ClubNet.Services
             return createResult;
         }
 
-        public ApiResponse<List<GetActividadDTO>> GetActividades()
+        public ApiResponse<List<GetActividadDTO>> GetActividades(int? entrenadorId = null)
         {
             ApiResponse<List<GetActividadDTO>> getResult = new ApiResponse<List<GetActividadDTO>>();
+
+            // Consulta base
             string query = @"
-                SELECT 
-                    a.actividad_id,
-                    a.nombre,
-                    a.descripcion,
-                    a.cupo,
-                    a.inicio,
-                    a.cuota_valor,
-                    a.estado,
-                    a.url_imagen,
-                    p.nombre AS ent_nombre,
-                    p.apellido AS ent_apellido,
-                    p.persona_id AS entrenador_id
-                FROM actividades a 
-                LEFT JOIN asignacion_entrenadores ae ON ae.actividad_id = a.actividad_id  
-                LEFT JOIN personas p ON p.persona_id = ae.persona_id  
-                ORDER BY a.actividad_id ASC;";
-            string result = PostgresHandler.GetJson(query);
+            SELECT 
+                a.actividad_id,
+                a.nombre,
+                a.descripcion,
+                a.cupo,
+                a.inicio,
+                a.cuota_valor,
+                a.estado,
+                a.url_imagen,
+                p.nombre AS ent_nombre,
+                p.apellido AS ent_apellido,
+                p.persona_id AS entrenador_id
+            FROM actividades a 
+            LEFT JOIN asignacion_entrenadores ae ON ae.actividad_id = a.actividad_id  
+            LEFT JOIN personas p ON p.persona_id = ae.persona_id";
+
+            // AGREGADO: Si es entrenador, filtramos por su ID
+            if (entrenadorId.HasValue && entrenadorId.Value > 0)
+            {
+                query += " WHERE ae.persona_id = @entId";
+            }
+
+            query += " ORDER BY a.actividad_id ASC;";
+
+            // Ejecución condicional dependiendo de si hay parámetro
+            string result;
+            if (entrenadorId.HasValue && entrenadorId.Value > 0)
+            {
+                result = PostgresHandler.GetJson(query, ("entId", entrenadorId.Value));
+            }
+            else
+            {
+                result = PostgresHandler.GetJson(query);
+            }
+
             List<GetActividadDTO> actividades = JsonConvert.DeserializeObject<List<GetActividadDTO>>(result);
             getResult.Data = actividades;
 

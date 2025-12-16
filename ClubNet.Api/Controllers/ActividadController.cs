@@ -29,9 +29,9 @@ namespace ClubNet.Api.Controllers
 
         [HttpGet("GetActividades")]
         [ProducesResponseType(typeof(List<GetActividadDTO>), StatusCodes.Status200OK)]
-        public IActionResult GetActividades()
+        public IActionResult GetActividades([FromQuery] int? entrenadorId = null)
         {
-            var result = _actividadService.GetActividades();
+            var result = _actividadService.GetActividades(entrenadorId);
             return result.Success ? Ok(result.Data) : BadRequest(result);
         }
 
