@@ -7,8 +7,11 @@ using MercadoPago.Config;
 using MercadoPago.Resource.Preference;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using System.Net.Http.Headers;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 
 namespace ClubNet.Services
@@ -225,6 +228,84 @@ namespace ClubNet.Services
                 response.Success = false;
                 response.Message = "Ocurrio un error obteniendo los cobros. " + ex.Message;
             }
+            return response;
+        }
+        public async Task<ApiResponse<byte[]>> GenerarReciboPdf(int cobroId)
+        {
+            var response = new ApiResponse<byte[]>();
+
+            string query = @"
+        SELECT c.cobro_id, 
+               concat(p.nombre, ' ', p.apellido) as socio, 
+               p.dni,
+               c.monto, 
+               c.periodo, 
+               a.nombre as actividad,
+               c.fecha_venc
+        FROM cobros c
+        INNER JOIN inscripciones i ON i.inscripcion_id = c.inscripcion_id
+        INNER JOIN personas p ON p.persona_id = i.persona_id
+        INNER JOIN actividades a ON a.actividad_id = i.actividad_id
+        WHERE c.cobro_id = @id AND c.estado = 'PAGADO'";
+
+            var tabla = PostgresHandler.GetDt(query, ("id", cobroId));
+
+            if (tabla.Rows.Count == 0)
+            {
+                response.Success = false;
+                response.Message = "El recibo no está disponible o el pago no ha sido confirmado.";
+                return response;
+            }
+
+            var row = tabla.Rows[0];
+
+            QuestPDF.Settings.License = LicenseType.Community;
+            var documento = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A5.Landscape()); // Formato apaisado pequeño
+                    page.Margin(1, Unit.Centimetre);
+                    page.PageColor(Colors.White);
+                    page.DefaultTextStyle(x => x.FontSize(11));
+
+                    page.Header()
+                        .Row(rowHeader =>
+                        {
+                            rowHeader.RelativeItem().Column(col =>
+                            {
+                                col.Item().Text("ClubNet").Bold().FontSize(20).FontColor(Colors.Blue.Medium);
+                                col.Item().Text("Comprobante de Pago").FontSize(14);
+                            });
+
+                            rowHeader.RelativeItem().AlignRight().Column(col =>
+                            {
+                                col.Item().Text($"Recibo N°: {row["cobro_id"]}");
+                                col.Item().Text($"Fecha Emisión: {DateTime.Now:dd/MM/yyyy}");
+                            });
+                        });
+
+                    // CONTENIDO
+                    page.Content().PaddingVertical(1, Unit.Centimetre).Column(col =>
+                    {
+                        col.Item().Text($"Recibimos de: {row["socio"]} (DNI: {row["dni"]})").Bold();
+                        col.Item().Text($"La suma de: ${row["monto"]}");
+                        col.Item().Text($"En concepto de: Cuota {row["actividad"]} - Período {row["periodo"]}");
+
+                        col.Item().PaddingTop(20).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
+
+                        col.Item().PaddingTop(10).Text("Estado: PAGADO").FontColor(Colors.Green.Medium).Bold();
+                    });
+
+                    page.Footer().AlignCenter().Text(x =>
+                    {
+                        x.Span("Gracias por confiar en ClubNet - ");
+                        x.CurrentPageNumber();
+                    });
+                });
+            });
+            response.Data = documento.GeneratePdf();
+            response.Success = true;
             return response;
         }
     }
