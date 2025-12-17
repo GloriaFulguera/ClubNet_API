@@ -142,35 +142,37 @@ namespace ClubNet.Services
         {
             var response = new ApiResponse();
 
-            // 1. Verificar si el usuario existe
-            string queryCheck = "SELECT COUNT(*) FROM usuarios WHERE email = @email";
-            string count = PostgresHandler.GetScalar(queryCheck, ("email", email));
+            // 1. Verificar si el usuario existe y OBTENER LA CLAVE ACTUAL (para poder hacer rollback)
+            string queryGetOld = "SELECT clave FROM usuarios WHERE email = @email";
+            // Usamos GetDt para obtener el hash viejo si existe
+            DataTable table = PostgresHandler.GetDt(queryGetOld, ("email", email));
 
-            if (count == "0")
+            if (table.Rows.Count == 0)
             {
-                // Por seguridad, a veces se dice "Si el correo existe, se envió", 
-                // pero para desarrollo diremos que no existe.
                 response.Success = false;
                 response.Message = "El correo no se encuentra registrado.";
                 return response;
             }
 
+            // Guardamos el hash viejo en una variable
+            string oldHash = table.Rows[0]["clave"].ToString();
+
             // 2. Generar nueva contraseña temporal
             string nuevaClave = GenerarClaveRandomd(8);
             string nuevoHash = BCrypt.Net.BCrypt.HashPassword(nuevaClave);
 
-            // 3. Actualizar en Base de Datos
+            // 3. Actualizar en Base de Datos con la NUEVA clave
             string queryUpdate = "UPDATE usuarios SET clave = @clave WHERE email = @email";
             bool dbResult = PostgresHandler.Exec(queryUpdate, ("clave", nuevoHash), ("email", email));
 
             if (!dbResult)
             {
                 response.Success = false;
-                response.Message = "Error al actualizar la contraseña.";
+                response.Message = "Error al actualizar la contraseña en la base de datos.";
                 return response;
             }
 
-            // 4. Enviar Email
+            // 4. Intentar Enviar Email
             bool emailSent = SendRecoveryEmail(email, nuevaClave);
 
             if (emailSent)
@@ -180,10 +182,20 @@ namespace ClubNet.Services
             }
             else
             {
+                // --- ROLLBACK MANUAL ---
+                // Si el mail falló, volvemos a poner la clave vieja para no bloquear al usuario
+                bool rollbackResult = PostgresHandler.Exec(queryUpdate, ("clave", oldHash), ("email", email));
+
                 response.Success = false;
-                // Nota: La contraseña ya se cambió en DB, esto podría ser un problema si el mail falla.
-                // Idealmente se debería hacer rollback, pero para este MVP está bien.
-                response.Message = "La contraseña se restableció, pero falló el envío del correo. Contacta al admin.";
+                if (rollbackResult)
+                {
+                    response.Message = "Falló el envío del correo. Tu contraseña NO ha sido modificada.";
+                }
+                else
+                {
+                    // Caso crítico muy raro: falló el update y también el rollback
+                    response.Message = "Error crítico: La contraseña cambió pero falló el envío del correo. Contacta a soporte.";
+                }
             }
 
             return response;
