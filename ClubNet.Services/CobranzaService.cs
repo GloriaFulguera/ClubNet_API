@@ -286,7 +286,7 @@ namespace ClubNet.Services
 
                                 logoRow.RelativeItem().PaddingLeft(10).Column(textCol =>
                                 {
-                                    textCol.Item().Text("ClubNet").Bold().FontSize(20).FontColor("#1e6091");
+                                    textCol.Item().Text("Clubios").Bold().FontSize(20).FontColor("#1e6091");
                                     textCol.Item().Text("Irigoyen 2150").FontSize(9);
                                     textCol.Item().Text("CABA - CP1408").FontSize(9);
                                 });
@@ -351,7 +351,7 @@ namespace ClubNet.Services
                     {
                         col.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
                         col.Item().PaddingTop(5).AlignCenter()
-                             .Text("Documento generado electrónicamente por ClubNet")
+                             .Text("Documento generado electrónicamente por Clubios")
                              .FontSize(8).FontColor(Colors.Grey.Medium);
                     });
                 });
