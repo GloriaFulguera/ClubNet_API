@@ -20,12 +20,18 @@ builder.Services.AddSwaggerGen(options =>
     // Incluye el archivo XML de documentación para que Swagger muestre los comentarios
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
+var allowedOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddEndpointsApiExplorer();//revisar
-builder.Services.AddCors(options => options.AddDefaultPolicy(builder => {
-    builder.AllowAnyOrigin();
-    builder.AllowAnyMethod();
-    builder.AllowAnyHeader();
-}));//revisar
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: allowedOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("http://localhost:4200", "https://clubnet-frontend.onrender.com")
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+                      });
+});//revisar
 
 
 PostgresHandler.ConnectionString = builder.Configuration.GetConnectionString("defaultConnection");
@@ -59,16 +65,19 @@ builder.Services.AddHostedService<WebhookWorker>();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+if (app.Environment.IsDevelopment())
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ClubNet.API");
-    c.RoutePrefix = string.Empty;
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ClubNet.API");
+        c.RoutePrefix = string.Empty;
+    });
+}
 
 app.MapControllers();
 
-app.UseCors();
+app.UseCors(allowedOrigins);
 //app.UseHttpsRedirection();
 app.UseAuthentication(); // 1. Autenticar (leer y validar el JWT)
 app.UseAuthorization();  // 2. Autorizar (verificar si el usuario tiene permiso)
