@@ -102,5 +102,22 @@ namespace ClubNet.Api.Controllers
             else
                 return BadRequest(result);
         }
+
+        /// <summary>
+        /// Endpoint para obtener el recibo de cuota pagada.
+        /// </summary>
+        /// <returns>La respuesta del pago.</returns>
+        [HttpGet("DescargarRecibo/{cobroId}")]
+        public async Task<IActionResult> DescargarRecibo(int cobroId)
+        {
+            var result = await _cobranzaService.GenerarReciboPdf(cobroId);
+
+            if (!result.Success)
+            {
+                return BadRequest(new { message = result.Message });
+            }
+
+            return File(result.Data, "application/pdf", $"Recibo_ClubNet_{cobroId}.pdf");
+        }
     }
 }

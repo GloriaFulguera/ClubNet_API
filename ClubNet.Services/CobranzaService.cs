@@ -7,8 +7,12 @@ using MercadoPago.Config;
 using MercadoPago.Resource.Preference;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using System.Net.Http.Headers;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using System.IO;
 using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 
 namespace ClubNet.Services
@@ -225,6 +229,136 @@ namespace ClubNet.Services
                 response.Success = false;
                 response.Message = "Ocurrio un error obteniendo los cobros. " + ex.Message;
             }
+            return response;
+        }
+
+        public async Task<ApiResponse<byte[]>> GenerarReciboPdf(int cobroId)
+        {
+            var response = new ApiResponse<byte[]>();
+
+            string query = @"
+                SELECT c.cobro_id, 
+                       concat(p.nombre, ' ', p.apellido) as socio, 
+                       p.dni,
+                       c.monto, 
+                       c.periodo, 
+                       a.nombre as actividad,
+                       c.fecha_venc
+                FROM cobros c
+                INNER JOIN inscripciones i ON i.inscripcion_id = c.inscripcion_id
+                INNER JOIN personas p ON p.persona_id = i.persona_id
+                INNER JOIN actividades a ON a.actividad_id = i.actividad_id
+                WHERE c.cobro_id = @id AND c.estado = 'PAGADO'";
+
+            var tabla = PostgresHandler.GetDt(query, ("id", cobroId));
+
+            if (tabla.Rows.Count == 0)
+            {
+                response.Success = false;
+                response.Message = "El recibo no está disponible o el pago no ha sido confirmado.";
+                return response;
+            }
+
+            var row = tabla.Rows[0];
+
+            QuestPDF.Settings.License = LicenseType.Community;
+            var rutaLogo = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "assets", "logo-prueba.png");
+
+            var documento = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A5.Landscape());
+                    page.Margin(1, Unit.Centimetre);
+                    page.PageColor(Colors.White);
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
+
+                    page.Header().Row(rowHeader =>
+                    {
+                        rowHeader.RelativeItem().Column(col =>
+                        {
+                            col.Item().Row(logoRow =>
+                            {
+                                if (File.Exists(rutaLogo))
+                                {
+                                    logoRow.ConstantItem(60).Image(rutaLogo);
+                                }
+
+                                logoRow.RelativeItem().PaddingLeft(10).Column(textCol =>
+                                {
+                                    textCol.Item().Text("ClubNet").Bold().FontSize(20).FontColor("#1e6091");
+                                    textCol.Item().Text("Irigoyen 2150").FontSize(9);
+                                    textCol.Item().Text("CABA - CP1408").FontSize(9);
+                                });
+                            });
+                        });
+
+                        rowHeader.RelativeItem().AlignRight().Column(col =>
+                        {
+                            col.Item().Text("RECIBO DE PAGO").FontSize(16).Bold().FontColor(Colors.Grey.Darken2);
+                            col.Item().Text($"N°: {Convert.ToInt32(row["cobro_id"]):000000}").FontSize(12);
+                            col.Item().Text($"Fecha: {DateTime.Now:dd/MM/yyyy}").FontSize(10);
+                        });
+                    });
+
+                    page.Content().PaddingVertical(10).Column(col =>
+                    {
+                        col.Item().LineHorizontal(2).LineColor("#1e6091");
+                        col.Item().PaddingBottom(10);
+                        col.Item().Background(Colors.Grey.Lighten4).Padding(10).Column(datos =>
+                        {
+                            datos.Item().Text(txt => {
+                                txt.Span("Recibimos de: ").Bold();
+                                txt.Span($"{row["socio"]}");
+                            });
+                            datos.Item().Text(txt => {
+                                txt.Span("DNI: ").Bold();
+                                txt.Span($"{row["dni"]}");
+                            });
+                        });
+
+                        col.Item().PaddingVertical(10);
+
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(1);
+                            });
+
+                            table.Header(header =>
+                            {
+                                header.Cell().Element(CellStyle).Text("Concepto");
+                                header.Cell().Element(CellStyle).AlignRight().Text("Importe");
+
+                                static IContainer CellStyle(IContainer container)
+                                {
+                                    return container.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5);
+                                }
+                            });
+
+                            table.Cell().Padding(5).Text($"Cuota {row["actividad"]} - Período {row["periodo"]}");
+                            table.Cell().Padding(5).AlignRight().Text($"$ {row["monto"]}");
+
+                            table.Cell().ColumnSpan(2).PaddingTop(10).AlignRight()
+                                 .Text($"Total Pagado: $ {row["monto"]}")
+                                 .FontSize(14).Bold().FontColor("#1e6091");
+                        });
+                    });
+
+                    page.Footer().Column(col =>
+                    {
+                        col.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+                        col.Item().PaddingTop(5).AlignCenter()
+                             .Text("Documento generado electrónicamente por ClubNet")
+                             .FontSize(8).FontColor(Colors.Grey.Medium);
+                    });
+                });
+            });
+
+            response.Data = documento.GeneratePdf();
+            response.Success = true;
             return response;
         }
     }
