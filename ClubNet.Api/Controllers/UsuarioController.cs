@@ -25,6 +25,7 @@ namespace ClubNet.Api.Controllers
         /// <param name="email">El email del usuario.</param>
         /// <returns>Los datos del usuario.</returns>
         [HttpGet("GetUsuario")]
+        [Authorize]
         [ProducesResponseType(typeof(UsuarioDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
         public IActionResult GetUsuarioByEmail(string email)
@@ -101,6 +102,7 @@ namespace ClubNet.Api.Controllers
         /// <param name="registro">Datos de la inscripción (Dni del usuario, ID de la Actividad).</param>
         /// <returns>Un objeto ApiResponse que contiene el ID de la nueva inscripción si es exitoso.</returns>
         [HttpPost("RegisterToActivity")]
+        [Authorize]
         [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
         public IActionResult RegisterToActivity(RegisterToActivityDTO registro)

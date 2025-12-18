@@ -59,9 +59,17 @@ namespace ClubNet.Services
         {
             ApiResponse result = new ApiResponse();
 
+            string dniStr = usuario.Dni.ToString();
+            if (dniStr.Length != 8)
+            {
+                result.Success = false;
+                result.Message = "El DNI debe tener exactamente 8 dígitos.";
+                return result;
+            }
+
             // 1. Actualizar campos en la tabla 'personas'
             string queryPersona = "UPDATE personas SET nombre = @nombre, apellido = @apellido, dni = @dni, estado = @estado, rol_id = @rol_id " +
-                "WHERE persona_id = @persona_id;";
+            "WHERE persona_id = @persona_id;";
 
             bool successPersona = PostgresHandler.Exec(queryPersona,
                 ("nombre", usuario.Nombre),
@@ -94,6 +102,15 @@ namespace ClubNet.Services
         public ApiResponse CreateUser(RegisterDTO usuario)
         {
             ApiResponse result = new ApiResponse();
+
+            string dniStr = usuario.Dni.ToString();
+            if (dniStr.Length != 8)
+            {
+                result.Success = false;
+                result.Message = "El DNI debe tener exactamente 8 dígitos.";
+                return result;
+            }
+
             string query = "CALL public.SP_ALTA_USUARIO(@p_email::varchar,@p_clave::varchar,@p_nombre::varchar,@p_apellido::varchar,@p_dni,@p_rol)";
             bool resultExec = PostgresHandler.Exec(query,
                 ("p_email", usuario.Email),
