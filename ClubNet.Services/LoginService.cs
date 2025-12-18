@@ -39,7 +39,7 @@ namespace ClubNet.Services
             if (userDataTable == null || userDataTable.Rows.Count == 0)
             {
                 loginResult.Success = false;
-                loginResult.Message = "Usuario inexistente.";
+                loginResult.Message = "Email o contraseña incorrectos.";
                 return loginResult;
             }
 
@@ -62,7 +62,7 @@ namespace ClubNet.Services
             if (!validPassword)
             {
                 loginResult.Success = false;
-                loginResult.Message = "Credenciales inválidas.";
+                loginResult.Message = "Email o contraseña incorrectos.";
                 return loginResult;
             }
 
