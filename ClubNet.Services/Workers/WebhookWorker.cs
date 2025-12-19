@@ -39,8 +39,21 @@ namespace ClubNet.Services.Workers
                 {
                     break;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Console.WriteLine("--------------------------------------------------");
+                    Console.WriteLine($"[ERROR CRITICO] Ocurrió un error procesando el pago:");
+                    Console.WriteLine($"MENSAJE: {ex.Message}");
+
+                    // AGREGA ESTO: Si hay un error interno (muy común en DB), muéstralo también
+                    if (ex.InnerException != null)
+                    {
+                        Console.WriteLine($"DETALLE INTERNO: {ex.InnerException.Message}");
+                    }
+
+                    Console.WriteLine($"DONDE: {ex.StackTrace}");
+                    Console.WriteLine("--------------------------------------------------");
+
                     proceso = false;
                 }
 
