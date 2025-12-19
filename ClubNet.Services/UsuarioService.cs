@@ -193,7 +193,7 @@ namespace ClubNet.Services
             }
 
             string queryInscripcion = "SELECT COUNT(*) FROM inscripciones i " +
-                "LEFT JOIN personas p ON p.dni = @dni " +
+                "LEFT JOIN personas p ON p.persona_id = i.persona_id " +
                 "WHERE p.dni = @dni AND i.actividad_id= @actividadId;";
             string resultActividad = PostgresHandler.GetScalar(queryInscripcion, 
                 ("dni", registro.Dni),
