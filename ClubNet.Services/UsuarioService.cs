@@ -6,6 +6,7 @@ using Dapper;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using System.Data;
+using System.Text.RegularExpressions;
 
 namespace ClubNet.Services
 {
@@ -108,6 +109,14 @@ namespace ClubNet.Services
             {
                 result.Success = false;
                 result.Message = "El DNI debe tener exactamente 8 dígitos.";
+                return result;
+            }
+
+            // Para que la contraseña sea válida debe tener al menos 6 caracteres en los cuales haya al menos un número y una letra minúscula.
+            if (!Regex.IsMatch(usuario.Clave, @"^(?=.*[0-9])(?=.*[a-z]).{6,}$"))
+            {
+                result.Success = false;
+                result.Message = "La contraseña debe tener al menos 6 caracteres, un número y una minúscula.";
                 return result;
             }
 
