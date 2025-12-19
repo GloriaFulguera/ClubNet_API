@@ -133,7 +133,6 @@ namespace ClubNet.Services
             ApiResponse<int> result = new ApiResponse<int>();
 
             string procedure = "SP_ALTA_INSCRIPCION";
-
             var parameters = new DynamicParameters();
             parameters.Add("@p_dni", registro.Dni, DbType.Int32);
             parameters.Add("@p_actividad_id", registro.Actividad_id, DbType.Int32);
@@ -145,7 +144,24 @@ namespace ClubNet.Services
 
             try
             {
-                if(!ValidarInscripcion(registro, out string mensajeValidacion))
+                string queryCupo = @"
+            SELECT 
+                CASE WHEN 
+                    (SELECT COUNT(*) FROM inscripciones WHERE actividad_id = @id) >= a.cupo 
+                THEN 1 ELSE 0 END as esta_lleno
+            FROM actividades a
+            WHERE a.actividad_id = @id";
+
+                string estaLlenoStr = PostgresHandler.GetScalar(queryCupo, ("id", registro.Actividad_id));
+
+                if (estaLlenoStr == "1")
+                {
+                    result.Success = false;
+                    result.Message = "No se puede realizar la inscripción: El cupo de la actividad está completo.";
+                    return result;
+                }
+
+                if (!ValidarInscripcion(registro, out string mensajeValidacion))
                 {
                     result.Success = false;
                     result.Message = mensajeValidacion;

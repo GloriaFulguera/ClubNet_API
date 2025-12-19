@@ -1,12 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http; // Necesario para StatusCodes
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using System;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System;
-using System.Linq;
-using Microsoft.AspNetCore.Http; // Necesario para StatusCodes
+using ClubNet.Models.DTO;
+using System.Collections.Generic;
 
 namespace ClubNet.Api.Controllers
 {
@@ -97,6 +99,85 @@ namespace ClubNet.Api.Controllers
             {
                 // Si algo falla
                 return Ok(new { sugerencia = "Ocurrió un error al generar la sugerencia.", modeloUsado = "error" });
+            }
+        }
+
+        /// <summary>
+        /// Analiza las clases y el esfuerzo para dar recomendaciones al entrenador.
+        /// </summary>
+        [HttpPost("recomendar-planificacion")]
+        // [Authorize(Roles = "Entrenador")] // <- ¡Descomenta esto cuando tengas la seguridad configurada!
+        public async Task<IActionResult> RecomendarPlanificacion([FromBody] List<ClaseDTO> clases)
+        {
+            var apiKey = _config["OpenRouter:ApiKey"];
+
+            if (clases == null || !clases.Any())
+            {
+                return BadRequest(new { mensaje = "No hay clases para analizar." });
+            }
+
+            try
+            {
+                // 1. Construir el resumen de las clases para el prompt
+                var resumenClases = new StringBuilder();
+                foreach (var c in clases)
+                {
+                    resumenClases.AppendLine($"- Actividad: {c.Actividad} | Clase: {c.Titulo} | Intensidad: {c.Intensidad} | Detalle: {c.Detalle}");
+                }
+
+                // 2. Crear el Prompt de experto
+                var prompt = $@"
+                Actúa como un Entrenador Deportivo Experto.
+                Analiza la siguiente lista de clases:
+                {resumenClases}
+
+                Responde ÚNICAMENTE en formato HTML simple (sin markdown ```html, solo las etiquetas body).
+                Usa esta estructura:
+                <p>Breve resumen general.</p>
+                <ul>
+                    <li><strong>Análisis de Carga:</strong> Tu opinión.</li>
+                    <li><strong>Riesgos:</strong> Posibles lesiones o fatiga.</li>
+                    <li><strong>Recomendación:</strong> Tu consejo clave.</li>
+                </ul>
+                <p>Frase motivadora final.</p>";
+
+                // 3. Configurar la petición a OpenRouter (Igual que en tu método anterior)
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+
+                var body = new
+                {
+                    model = "gpt-3.5-turbo", // O usa la lógica de modelos gratuitos que ya tienes
+                    messages = new[]
+                    {
+                new { role = "system", content = "Eres un asistente experto en planificación deportiva." },
+                new { role = "user", content = prompt }
+            },
+                    max_tokens = 300,
+                    temperature = 0.7
+                };
+
+                var content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync(OPENROUTER_URL, content);
+
+                if (!response.IsSuccessStatusCode)
+                    return StatusCode((int)response.StatusCode, "Error al consultar la IA");
+
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                using var resultDoc = JsonDocument.Parse(jsonResponse);
+
+                // Extraer el texto de la respuesta
+                var recomendacion = resultDoc.RootElement
+                    .GetProperty("choices")[0]
+                    .GetProperty("message")
+                    .GetProperty("content")
+                    .GetString();
+
+                return Ok(new { recomendacion });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Error interno del servidor", detalle = ex.Message });
             }
         }
     }
