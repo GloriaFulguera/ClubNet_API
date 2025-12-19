@@ -60,7 +60,7 @@ namespace ClubNet.Api.Controllers
         [ProducesResponseType(typeof(PaymentResponse), StatusCodes.Status200OK)]
         public IActionResult Success([FromQuery] PaymentResponse response)
         {
-            string url = "http://localhost:4200/pago/exito";
+            string url = "https://clubnet-frontend.onrender.com/pago/exito";
             Console.WriteLine(JsonConvert.SerializeObject(response));
             return Redirect(url);
         }
@@ -73,8 +73,8 @@ namespace ClubNet.Api.Controllers
         [ProducesResponseType(typeof(PaymentResponse), StatusCodes.Status200OK)]
         public IActionResult Failure([FromQuery] PaymentResponse response)
         {
-            Console.WriteLine(JsonConvert.SerializeObject(response));
-            return Ok(response);
+            string url = "https://clubnet-frontend.onrender.com/pago/fallo";
+            return Redirect(url);
         }
 
         /// <summary>
@@ -85,8 +85,8 @@ namespace ClubNet.Api.Controllers
         [ProducesResponseType(typeof(PaymentResponse), StatusCodes.Status200OK)]
         public IActionResult Pending([FromQuery] PaymentResponse response)
         {
-            Console.WriteLine(JsonConvert.SerializeObject(response));
-            return Ok(response);
+            string url = "https://clubnet-frontend.onrender.com/pago/pendiente";
+            return Redirect(url);
         }
 
         /// <summary>
