@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ClubNet.Services
 {
@@ -120,6 +121,15 @@ namespace ClubNet.Services
         public ApiResponse Register(RegisterDTO register)
         {
             ApiResponse result = new ApiResponse();
+
+            // Para que la contraseña sea válida debe tener al menos 6 caracteres en los cuales haya al menos un número y una letra minúscula.
+            if (!Regex.IsMatch(register.Clave, @"^(?=.*[0-9])(?=.*[a-z]).{6,}$"))
+            {
+                result.Success = false;
+                result.Message = "La contraseña debe tener al menos 6 caracteres, un número y una minúscula.";
+                return result;
+            }
+
             string query = "CALL public.SP_ALTA_USUARIO(@p_email::varchar,@p_clave::varchar,@p_nombre::varchar,@p_apellido::varchar,@p_dni,@p_rol)";
             bool resultExec = PostgresHandler.Exec(query,
                 ("p_email", register.Email),
